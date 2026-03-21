@@ -16,6 +16,7 @@ final class AuditEntryEntity {
     var actionType: String
     var commandJson: String?
     var resultJson: String?
+    var metadataJson: String?
     var riskLevel: String?
     var sessionId: String
 
@@ -25,6 +26,7 @@ final class AuditEntryEntity {
         actionType: String,
         commandJson: String? = nil,
         resultJson: String? = nil,
+        metadataJson: String? = nil,
         riskLevel: String? = nil,
         sessionId: String
     ) {
@@ -33,6 +35,7 @@ final class AuditEntryEntity {
         self.actionType = actionType
         self.commandJson = commandJson
         self.resultJson = resultJson
+        self.metadataJson = metadataJson
         self.riskLevel = riskLevel
         self.sessionId = sessionId
     }
@@ -76,12 +79,16 @@ final class AuditStore {
             resultJson = String(data: data, encoding: .utf8)
         }
 
+        let metadataData = try encoder.encode(entry.metadata)
+        let metadataJson = String(data: metadataData, encoding: .utf8)
+
         let entity = AuditEntryEntity(
             id: entry.id,
             timestamp: Date(timeIntervalSince1970: TimeInterval(entry.timestamp) / 1000.0),
             actionType: entry.actionType.rawValue,
             commandJson: commandJson,
             resultJson: resultJson,
+            metadataJson: metadataJson,
             riskLevel: entry.riskLevel?.rawValue,
             sessionId: entry.sessionId
         )
@@ -238,6 +245,12 @@ final class AuditStore {
         }
 
         let riskLevel: RiskLevel? = entity.riskLevel.flatMap { RiskLevel(rawValue: $0) }
+        let metadata: [String: String]
+        if let json = entity.metadataJson, let data = json.data(using: .utf8) {
+            metadata = (try? decoder.decode([String: String].self, from: data)) ?? [:]
+        } else {
+            metadata = [:]
+        }
 
         return AuditEntry(
             id: entity.id,
@@ -246,7 +259,8 @@ final class AuditStore {
             command: command,
             result: result,
             riskLevel: riskLevel,
-            sessionId: entity.sessionId
+            sessionId: entity.sessionId,
+            metadata: metadata
         )
     }
 }

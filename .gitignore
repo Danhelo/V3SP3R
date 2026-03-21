@@ -49,6 +49,11 @@ mentra-bridge/node_modules/
 mentra-bridge/dist/
 mentra-bridge/.env
 
+# Swift / Xcode build artifacts
+.build/
+.spm/
+.derivedData/
+
 # Environment / secrets
 .env
 .env.local

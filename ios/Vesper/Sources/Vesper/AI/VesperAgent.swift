@@ -40,7 +40,7 @@ protocol ChatStoreProtocol {
 @Observable
 final class VesperAgent {
 
-    private let openRouterClient: OpenRouterClient
+    private let openRouterClient: OpenRouterClientProtocol
     private let commandExecutor: CommandExecuting
     private let auditService: AuditServiceProtocol
     private let chatStore: ChatStoreProtocol
@@ -61,7 +61,7 @@ final class VesperAgent {
     // MARK: - Init
 
     init(
-        openRouterClient: OpenRouterClient,
+        openRouterClient: OpenRouterClientProtocol,
         commandExecutor: CommandExecuting,
         auditService: AuditServiceProtocol,
         chatStore: ChatStoreProtocol,
@@ -85,6 +85,11 @@ final class VesperAgent {
 
     /// Send a user message and process the AI response loop.
     func sendMessage(_ userMessage: String, imageAttachments: [ImageAttachment]? = nil) async {
+        guard conversationState.pendingApproval == nil else {
+            conversationState.error = "Resolve the pending approval before sending a new message."
+            return
+        }
+
         var messages = conversationState.messages
 
         // Add user message
@@ -151,7 +156,11 @@ final class VesperAgent {
 
     /// Continue after the user approves or rejects a pending action.
     func continueAfterApproval(approvalId: String, approved: Bool) async {
+        let effectiveApprovalId = conversationState.pendingApproval?.id ?? approvalId
+
         conversationState.isLoading = true
+        conversationState.pendingApproval = nil
+        conversationState.error = nil
         conversationState.progress = AgentProgress(
             stage: .toolExecution,
             detail: approved ? "Applying approved action..." : "Rejecting action..."
@@ -159,15 +168,23 @@ final class VesperAgent {
 
         let result: CommandResult
         if approved {
-            result = await commandExecutor.approve(approvalId, sessionId: currentSessionId)
+            result = await commandExecutor.approve(effectiveApprovalId, sessionId: currentSessionId)
         } else {
-            result = await commandExecutor.reject(approvalId, sessionId: currentSessionId)
+            result = await commandExecutor.reject(effectiveApprovalId, sessionId: currentSessionId)
         }
 
         var messages = conversationState.messages
 
         // Find the tool call that was pending and add its result
-        let toolCallId = messages.last(where: { $0.toolCalls != nil })?.toolCalls?.first?.id ?? approvalId
+        let toolCallId = messages.last(where: { $0.metadata?.pendingApprovalId == effectiveApprovalId })?.toolCalls?.first?.id
+            ?? messages.last(where: { $0.toolCalls != nil })?.toolCalls?.first?.id
+            ?? effectiveApprovalId
+
+        if let index = messages.lastIndex(where: { $0.metadata?.pendingApprovalId == effectiveApprovalId }) {
+            var pendingMessage = messages[index]
+            pendingMessage.metadata = nil
+            messages[index] = pendingMessage
+        }
 
         let toolResultMessage = ChatMessage(
             role: .tool,
@@ -345,11 +362,18 @@ final class VesperAgent {
                     // Execute command
                     let commandResult = await commandExecutor.execute(command, sessionId: currentSessionId)
 
-                    // Check if approval is required
+        // Check if approval is required
                     if commandResult.requiresConfirmation, let approvalId = commandResult.pendingApprovalId {
                         if let pendingApproval = commandExecutor.getPendingApproval(approvalId) {
+                            if let assistantIndex = messages.lastIndex(where: { $0.toolCalls != nil }) {
+                                var pendingMessage = messages[assistantIndex]
+                                pendingMessage.metadata = MessageMetadata(pendingApprovalId: approvalId)
+                                messages[assistantIndex] = pendingMessage
+                            }
                             conversationState.messages = messages
                             conversationState.isLoading = false
+                            conversationState.pendingApproval = pendingApproval
+                            conversationState.error = nil
                             conversationState.progress = AgentProgress(
                                 stage: .approval,
                                 detail: "Approval required to continue."

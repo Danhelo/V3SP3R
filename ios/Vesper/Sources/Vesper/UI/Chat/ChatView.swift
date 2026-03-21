@@ -4,13 +4,16 @@ struct ChatView: View {
     @Bindable var viewModel: ChatViewModel
 
     var body: some View {
+        let activeApproval = viewModel.conversationState.pendingApproval
+        let inputLocked = viewModel.conversationState.isLoading || activeApproval != nil
+
         VStack(spacing: 0) {
             messageList
             approvalBanner
             progressBanner
             InputBar(
                 text: $viewModel.messageText,
-                isLoading: viewModel.conversationState.isLoading,
+                isLoading: inputLocked,
                 isRecording: viewModel.isRecording,
                 onSend: viewModel.sendMessage,
                 onVoice: viewModel.toggleRecording,
@@ -35,6 +38,7 @@ struct ChatView: View {
                     ForEach(viewModel.conversationState.messages) { message in
                         MessageBubble(
                             message: message,
+                            approval: viewModel.conversationState.pendingApproval,
                             onApprove: { id in viewModel.approveCommand(id) },
                             onDeny: { id in viewModel.denyCommand(id) }
                         )
@@ -71,6 +75,18 @@ struct ChatView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
             .background(Color.orange.opacity(0.1))
+        } else if let approval = viewModel.conversationState.pendingApproval {
+            HStack(spacing: 8) {
+                Image(systemName: "lock.shield")
+                    .foregroundStyle(.orange)
+                Text("Approval required: \(approval.riskAssessment.reason)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(Color.orange.opacity(0.08))
         }
     }
 

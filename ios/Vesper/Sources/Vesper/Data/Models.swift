@@ -391,6 +391,7 @@ struct ChatMessage: Codable, Sendable, Identifiable, Equatable {
     var toolCalls: [ToolCall]?
     var toolResults: [ToolResult]?
     var imageAttachments: [ImageAttachment]?
+    var metadata: MessageMetadata?
     var isError: Bool
 
     enum CodingKeys: String, CodingKey {
@@ -398,6 +399,7 @@ struct ChatMessage: Codable, Sendable, Identifiable, Equatable {
         case toolCalls = "tool_calls"
         case toolResults = "tool_results"
         case imageAttachments = "image_attachments"
+        case metadata
         case isError = "is_error"
     }
 
@@ -409,6 +411,7 @@ struct ChatMessage: Codable, Sendable, Identifiable, Equatable {
         toolCalls: [ToolCall]? = nil,
         toolResults: [ToolResult]? = nil,
         imageAttachments: [ImageAttachment]? = nil,
+        metadata: MessageMetadata? = nil,
         isError: Bool = false
     ) {
         self.id = id
@@ -418,6 +421,7 @@ struct ChatMessage: Codable, Sendable, Identifiable, Equatable {
         self.toolCalls = toolCalls
         self.toolResults = toolResults
         self.imageAttachments = imageAttachments
+        self.metadata = metadata
         self.isError = isError
     }
 
@@ -487,6 +491,7 @@ struct ConversationState: Sendable {
     var error: String?
     var sessionId: String = UUID().uuidString
     var progress: AgentProgress?
+    var pendingApproval: PendingApproval?
 }
 
 // MARK: - Agent Progress
@@ -500,6 +505,20 @@ enum AgentProgressStage: String, Sendable, CaseIterable {
     case modelRequest
     case toolExecution
     case approval
+}
+
+// MARK: - Message Metadata
+
+struct MessageMetadata: Codable, Sendable, Equatable {
+    var pendingApprovalId: String?
+
+    enum CodingKeys: String, CodingKey {
+        case pendingApprovalId = "pending_approval_id"
+    }
+
+    init(pendingApprovalId: String? = nil) {
+        self.pendingApprovalId = pendingApprovalId
+    }
 }
 
 // MARK: - Audit Entry
@@ -574,7 +593,7 @@ enum ApprovalMethod: String, Codable, Sendable {
 
 // MARK: - Pending Approval
 
-struct PendingApproval: Sendable, Identifiable {
+struct PendingApproval: Sendable, Identifiable, Equatable {
     let id: String
     let command: ExecuteCommand
     let riskAssessment: RiskAssessment

@@ -145,3 +145,60 @@ final class InMemoryAuditStore: AuditStoreProtocol {
         lock.unlock()
     }
 }
+
+// MARK: - Persistent Audit Store Adapter
+
+/// Bridges the synchronous audit protocol to the SwiftData-backed audit store.
+/// Keeps a small in-memory cache for fast reads while mirroring writes to disk.
+final class PersistentAuditStoreAdapter: @unchecked Sendable, AuditStoreProtocol {
+
+    private let auditStore: AuditStore
+    private let lock = NSLock()
+    private var cachedEntries: [AuditEntry]
+    private let cacheLimit: Int
+
+    @MainActor
+    init(auditStore: AuditStore, cacheLimit: Int = 500) {
+        self.auditStore = auditStore
+        self.cacheLimit = cacheLimit
+        self.cachedEntries = Array((try? auditStore.queryRecent(limit: cacheLimit))?.reversed() ?? [])
+    }
+
+    func save(_ entry: AuditEntry) {
+        lock.lock()
+        cachedEntries.append(entry)
+        if cachedEntries.count > cacheLimit {
+            cachedEntries.removeFirst(cachedEntries.count - cacheLimit)
+        }
+        lock.unlock()
+
+        Task { @MainActor in
+            try? self.auditStore.log(entry)
+        }
+    }
+
+    func loadEntries(limit: Int) -> [AuditEntry] {
+        lock.lock()
+        defer { lock.unlock() }
+        if cachedEntries.count <= limit {
+            return cachedEntries
+        }
+        return Array(cachedEntries.suffix(limit))
+    }
+
+    func loadEntries(sessionId: String) -> [AuditEntry] {
+        lock.lock()
+        defer { lock.unlock() }
+        return cachedEntries.filter { $0.sessionId == sessionId }
+    }
+
+    func clearAll() {
+        lock.lock()
+        cachedEntries.removeAll()
+        lock.unlock()
+
+        Task { @MainActor in
+            try? self.auditStore.clear()
+        }
+    }
+}

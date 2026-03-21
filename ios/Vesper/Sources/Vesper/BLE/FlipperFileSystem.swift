@@ -14,7 +14,7 @@ class FlipperFileSystem: FlipperFileSystemProtocol, @unchecked Sendable {
     // MARK: - Constants
 
     private static let maxCliCommandLength = 512
-    private static let maxContentSize = 256 * 1024 // 256 KB
+    internal static let maxContentSize = InputValidator.maxContentSizeBytes
     private static let allowedPathPrefixes = ["/ext/", "/int/", "/ext", "/int"]
     private static let batteryMinMV = 3_300
     private static let batteryMaxMV = 4_200
@@ -99,7 +99,7 @@ class FlipperFileSystem: FlipperFileSystemProtocol, @unchecked Sendable {
 
     func writeFileBytes(_ path: String, content: Data) async throws -> Int64 {
         let validPath = try validatePath(path)
-        try validateContentSize(content)
+        try Self.validateContentSize(content)
 
         let response = await withCliFallback(
             primary: { try await self.flipperProtocol.sendCommand(.writeFile(path: validPath, data: content)) },
@@ -330,7 +330,7 @@ class FlipperFileSystem: FlipperFileSystemProtocol, @unchecked Sendable {
         return normalized
     }
 
-    private func validateContentSize(_ content: Data) throws {
+    static func validateContentSize(_ content: Data) throws {
         guard content.count <= Self.maxContentSize else {
             throw FlipperException(message: "Content exceeds maximum size of \(Self.maxContentSize) bytes (got \(content.count))")
         }

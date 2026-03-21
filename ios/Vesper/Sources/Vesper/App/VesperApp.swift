@@ -23,7 +23,10 @@ class ServiceLocator: ObservableObject {
     lazy var chatStore: ChatStore = {
         (try? ChatStore()) ?? ChatStore(modelContainer: try! ModelContainer(for: ChatSessionEntity.self))
     }()
-    lazy var auditStoreImpl = InMemoryAuditStore()
+    lazy var auditStore: AuditStoreProtocol = {
+        let store = (try? AuditStore()) ?? AuditStore(modelContainer: try! ModelContainer(for: AuditEntryEntity.self))
+        return PersistentAuditStoreAdapter(auditStore: store)
+    }()
 
     // BLE layer
     lazy var bleManager = FlipperBLEManager()
@@ -31,7 +34,7 @@ class ServiceLocator: ObservableObject {
     lazy var fileSystem = FlipperFileSystem(protocol: flipperProtocol)
 
     // Domain layer
-    lazy var auditService = AuditService(store: auditStoreImpl)
+    lazy var auditService = AuditService(store: auditStore)
     lazy var riskAssessor = RiskAssessor(settingsStore: settingsStore)
     lazy var commandExecutor = CommandExecutor(
         fileSystem: fileSystem,
@@ -56,7 +59,29 @@ class ServiceLocator: ObservableObject {
     lazy var ttsService = TTSService()
 
     // Glasses layer
-    lazy var glassesBridgeClient = GlassesBridgeClient()
+    lazy var glassesBridgeClient: GlassesBridgeClient = {
+        let client = GlassesBridgeClient()
+        client.onMessage = { [weak self] message in
+            guard let self else { return }
+
+            switch message.type.lowercased() {
+            case "ai_response":
+                if let text = message.content?.trimmingCharacters(in: .whitespacesAndNewlines),
+                   !text.isEmpty {
+                    self.ttsService.speak(text)
+                }
+            case "status":
+                break
+            default:
+                break
+            }
+        }
+        return client
+    }()
+
+    init() {
+        configureGlassesBridgeIfNeeded()
+    }
 
     // ViewModels
     lazy var chatViewModel = ChatViewModel(
@@ -86,6 +111,15 @@ class ServiceLocator: ObservableObject {
     )
     lazy var fapHubViewModel = FapHubViewModel(commandExecutor: commandExecutor)
     lazy var resourceBrowserViewModel = ResourceBrowserViewModel(commandExecutor: commandExecutor)
+
+    private func configureGlassesBridgeIfNeeded() {
+        guard settingsStore.glassesEnabled,
+              !settingsStore.glassesBridgeUrl.isEmpty else {
+            return
+        }
+
+        glassesBridgeClient.connect(url: settingsStore.glassesBridgeUrl)
+    }
 }
 
 struct ContentView: View {

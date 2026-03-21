@@ -353,6 +353,22 @@ final class VesperAgentTests: XCTestCase {
         XCTAssertFalse(json.contains("\"isError\""))
     }
 
+    func testChatMessageMetadataRoundTrip() throws {
+        let message = ChatMessage(
+            role: .assistant,
+            content: "Pending approval",
+            metadata: MessageMetadata(pendingApprovalId: "approval-123")
+        )
+
+        let encoder = JSONEncoder()
+        let decoder = JSONDecoder()
+
+        let data = try encoder.encode(message)
+        let decoded = try decoder.decode(ChatMessage.self, from: data)
+
+        XCTAssertEqual(decoded.metadata?.pendingApprovalId, "approval-123")
+    }
+
     // MARK: - ConversationState Tests
 
     func testConversationStateStartsEmpty() {
@@ -378,6 +394,11 @@ final class VesperAgentTests: XCTestCase {
         XCTAssertEqual(state.messages.count, 2)
         XCTAssertEqual(state.messages[0].role, .user)
         XCTAssertEqual(state.messages[1].role, .assistant)
+    }
+
+    func testConversationStateDefaultsWithoutPendingApproval() {
+        let state = ConversationState()
+        XCTAssertNil(state.pendingApproval)
     }
 
     // MARK: - CommandAction Tests
@@ -470,5 +491,251 @@ final class VesperAgentTests: XCTestCase {
     func testFileEntryIdentifiable() {
         let entry = FileEntry(name: "test.sub", path: "/ext/subghz/test.sub", isDirectory: false)
         XCTAssertEqual(entry.id, "/ext/subghz/test.sub")
+    }
+}
+
+// MARK: - Approval Flow Tests
+
+private final class MockOpenRouterClient: OpenRouterClientProtocol, @unchecked Sendable {
+    var chatResponses: [ChatCompletionResult]
+    var recordedMessages: [[ChatMessage]] = []
+
+    init(chatResponses: [ChatCompletionResult]) {
+        self.chatResponses = chatResponses
+    }
+
+    func chat(messages: [ChatMessage], sessionId: String) async -> ChatCompletionResult {
+        recordedMessages.append(messages)
+        guard !chatResponses.isEmpty else {
+            return .error("No mock response configured")
+        }
+        return chatResponses.removeFirst()
+    }
+
+    func formatResult(_ result: CommandResult) -> String {
+        let encoder = JSONEncoder()
+        if let data = try? encoder.encode(result),
+           let json = String(data: data, encoding: .utf8) {
+            return json
+        }
+        return "{\"success\":false,\"error\":\"formatting failed\"}"
+    }
+
+    func parseCommand(from arguments: String) -> (command: ExecuteCommand?, error: String?) {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        guard let data = arguments.data(using: .utf8) else {
+            return (nil, "Invalid UTF-8")
+        }
+        do {
+            return (try decoder.decode(ExecuteCommand.self, from: data), nil)
+        } catch {
+            return (nil, error.localizedDescription)
+        }
+    }
+}
+
+private final class MockCommandExecutor: CommandExecuting, @unchecked Sendable {
+    var executeResult: CommandResult
+    var approveResult: CommandResult
+    var rejectResult: CommandResult
+    var pendingApprovals: [String: PendingApproval] = [:]
+    var executedCommands: [ExecuteCommand] = []
+    var approvedApprovalIds: [String] = []
+    var rejectedApprovalIds: [String] = []
+
+    init(executeResult: CommandResult, approveResult: CommandResult, rejectResult: CommandResult) {
+        self.executeResult = executeResult
+        self.approveResult = approveResult
+        self.rejectResult = rejectResult
+    }
+
+    func execute(_ command: ExecuteCommand, sessionId: String) async -> CommandResult {
+        executedCommands.append(command)
+        return executeResult
+    }
+
+    func approve(_ approvalId: String, sessionId: String) async -> CommandResult {
+        approvedApprovalIds.append(approvalId)
+        return approveResult
+    }
+
+    func reject(_ approvalId: String, sessionId: String) async -> CommandResult {
+        rejectedApprovalIds.append(approvalId)
+        return rejectResult
+    }
+
+    func getPendingApproval(_ approvalId: String) -> PendingApproval? {
+        pendingApprovals[approvalId]
+    }
+}
+
+private final class MockAuditService: AuditServiceProtocol, @unchecked Sendable {
+    var currentSessionId: String?
+    var entries: [AuditEntry] = []
+
+    func startSession(deviceName: String?) {
+        currentSessionId = UUID().uuidString
+    }
+
+    func endSession() {
+        currentSessionId = nil
+    }
+
+    func log(_ entry: AuditEntry) {
+        entries.append(entry)
+    }
+}
+
+private final class MockChatStore: ChatStoreProtocol {
+    var savedSessions: [String: [ChatMessage]] = [:]
+    var savedDeviceNames: [String: String?] = [:]
+
+    func save(sessionId: String, messages: [ChatMessage], deviceName: String?) throws {
+        savedSessions[sessionId] = messages
+        savedDeviceNames[sessionId] = deviceName
+    }
+
+    func loadMessages(sessionId: String) throws -> [ChatMessage] {
+        savedSessions[sessionId] ?? []
+    }
+
+    func deleteSession(sessionId: String) throws {
+        savedSessions.removeValue(forKey: sessionId)
+        savedDeviceNames.removeValue(forKey: sessionId)
+    }
+
+    func listSessions() throws -> [ChatSessionSummary] {
+        []
+    }
+}
+
+final class VesperAgentApprovalFlowTests: XCTestCase {
+    private func makeAgent(
+        approvalId: String = "approval-123",
+        approvedCommandResult: CommandResult = CommandResult(
+            success: true,
+            action: .delete,
+            data: CommandResultData(message: "approved"),
+            executionTimeMs: 10
+        ),
+        rejectedCommandResult: CommandResult = CommandResult(
+            success: false,
+            action: .delete,
+            error: "rejected",
+            executionTimeMs: 5
+        )
+    ) -> (VesperAgent, MockOpenRouterClient, MockCommandExecutor, MockChatStore) {
+        let command = ExecuteCommand(
+            action: .delete,
+            args: CommandArgs(path: "/ext/test.txt"),
+            justification: "Remove file",
+            expectedEffect: "Delete file"
+        )
+        let commandData = try! JSONEncoder().encode(command)
+        let toolCall = ToolCall(
+            id: "tool-1",
+            name: "execute_command",
+            arguments: String(data: commandData, encoding: .utf8)!
+        )
+        let approvalResult = CommandResult(
+            success: false,
+            action: .delete,
+            error: "Approval required",
+            executionTimeMs: 12,
+            requiresConfirmation: true,
+            pendingApprovalId: approvalId
+        )
+        let pendingApproval = PendingApproval(
+            id: approvalId,
+            command: command,
+            riskAssessment: RiskAssessment(
+                level: .high,
+                reason: "File deletion",
+                affectedPaths: ["/ext/test.txt"],
+                requiresDiff: false,
+                requiresConfirmation: true
+            ),
+            sessionId: "session-approval"
+        )
+
+        let openRouterClient = MockOpenRouterClient(chatResponses: [
+            .success(ChatCompletionResponse(
+                content: "I will delete the file.",
+                toolCalls: [toolCall],
+                model: "test-model",
+                usage: nil
+            )),
+            .success(ChatCompletionResponse(
+                content: "Done.",
+                toolCalls: nil,
+                model: "test-model",
+                usage: nil
+            ))
+        ])
+
+        let commandExecutor = MockCommandExecutor(
+            executeResult: approvalResult,
+            approveResult: approvedCommandResult,
+            rejectResult: rejectedCommandResult
+        )
+        commandExecutor.pendingApprovals[approvalId] = pendingApproval
+
+        let chatStore = MockChatStore()
+        let auditService = MockAuditService()
+        let settingsStore = SettingsStore(defaults: UserDefaults(suiteName: "vesper.approval.tests")!)
+        let agent = VesperAgent(
+            openRouterClient: openRouterClient,
+            commandExecutor: commandExecutor,
+            auditService: auditService,
+            chatStore: chatStore,
+            settingsStore: settingsStore
+        )
+        agent.startNewSession(deviceName: nil)
+
+        return (agent, openRouterClient, commandExecutor, chatStore)
+    }
+
+    func testApprovalRequestPersistsPendingStateAndMetadata() async {
+        let (agent, openRouterClient, commandExecutor, chatStore) = makeAgent()
+
+        await agent.sendMessage("Please delete /ext/test.txt")
+
+        XCTAssertEqual(commandExecutor.executedCommands.count, 1)
+        XCTAssertEqual(agent.conversationState.messages.count, 2)
+        XCTAssertNotNil(agent.conversationState.pendingApproval)
+        XCTAssertEqual(agent.conversationState.pendingApproval?.id, "approval-123")
+        XCTAssertEqual(agent.conversationState.messages.last?.metadata?.pendingApprovalId, "approval-123")
+        XCTAssertFalse(agent.conversationState.isLoading)
+        XCTAssertEqual(openRouterClient.recordedMessages.count, 1)
+        XCTAssertEqual(chatStore.savedSessions[agent.conversationState.sessionId]?.count, 2)
+    }
+
+    func testApproveCommandResumesConversation() async {
+        let (agent, openRouterClient, commandExecutor, _) = makeAgent()
+
+        await agent.sendMessage("Please delete /ext/test.txt")
+        await agent.continueAfterApproval(approvalId: "approval-123", approved: true)
+
+        XCTAssertEqual(commandExecutor.approvedApprovalIds, ["approval-123"])
+        XCTAssertNil(agent.conversationState.pendingApproval)
+        XCTAssertFalse(agent.conversationState.isLoading)
+        XCTAssertEqual(openRouterClient.recordedMessages.count, 2)
+        XCTAssertEqual(agent.conversationState.messages.filter { $0.role == .tool }.count, 1)
+        XCTAssertEqual(agent.conversationState.messages.last?.role, .assistant)
+        XCTAssertEqual(agent.conversationState.messages.first(where: { $0.role == .assistant })?.metadata?.pendingApprovalId, nil)
+    }
+
+    func testDenyCommandResumesConversation() async {
+        let (agent, openRouterClient, commandExecutor, _) = makeAgent()
+
+        await agent.sendMessage("Please delete /ext/test.txt")
+        await agent.continueAfterApproval(approvalId: "approval-123", approved: false)
+
+        XCTAssertEqual(commandExecutor.rejectedApprovalIds, ["approval-123"])
+        XCTAssertNil(agent.conversationState.pendingApproval)
+        XCTAssertFalse(agent.conversationState.isLoading)
+        XCTAssertEqual(openRouterClient.recordedMessages.count, 2)
+        XCTAssertEqual(agent.conversationState.messages.last?.role, .assistant)
     }
 }

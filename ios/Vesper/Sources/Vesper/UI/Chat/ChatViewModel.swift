@@ -64,12 +64,14 @@ class ChatViewModel {
 
     func approveCommand(_ approvalId: String) {
         Task {
-            // CommandExecutor handles approval internally
+            await agent.continueAfterApproval(approvalId: approvalId, approved: true)
         }
     }
 
     func denyCommand(_ approvalId: String) {
-        // CommandExecutor handles denial internally
+        Task {
+            await agent.continueAfterApproval(approvalId: approvalId, approved: false)
+        }
     }
 
     func speakResponse(_ text: String) {

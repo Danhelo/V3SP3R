@@ -16,7 +16,10 @@
 		276DF0C3847DBCCB1F1AC602 /* DiffViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29418966301D153236D0D41E /* DiffViewer.swift */; };
 		2A93373F3BCE36AD757BBBBA /* DiffService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1EBFAE8D19940FFC5AC907B /* DiffService.swift */; };
 		2C01DA6DDFAEC8B9616105FA /* InputValidatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E879AF4E1B5B0EA8FC255EB4 /* InputValidatorTests.swift */; };
+		318C7E7FBE2C4F7D9D3E6E44 /* OpenRouterClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E5D7F93A8A94B7C84D74C1A /* OpenRouterClientTests.swift */; };
 		33230AAF4D5C1E0E766C9978 /* RiskAssessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3BAAF8942CF5AAB2B36D9C6 /* RiskAssessorTests.swift */; };
+		4B2F2A1D4E7D4F3FA7A9F8C1 /* AuditStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4B0A3F9A17B4C76B71A2D4F /* AuditStoreTests.swift */; };
+		4F9B5E7C0A1D4C2BB7A5E3D1 /* FlipperFileSystemValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77E7F4A91C634F02A6F6D1C5 /* FlipperFileSystemValidationTests.swift */; };
 		34B9CEE27B94C614934018B8 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D63DC9DAD8989B7D9A70DF89 /* SettingsViewModel.swift */; };
 		37C85DC236BCF99DCB4DD3B7 /* InputBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75766EF4374B1C14C411FA72 /* InputBar.swift */; };
 		3C256A47DD4FDD41E8F04233 /* FapHubView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23AE68EF2A694A00B37DB5EA /* FapHubView.swift */; };
@@ -78,11 +81,13 @@
 		2E07D73FE32DA2BC423DB0B6 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		34BC301433F6A157E9E09DD6 /* FileBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserView.swift; sourceTree = "<group>"; };
 		3A10552A837BCFF7F7AACF92 /* VesperAgentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VesperAgentTests.swift; sourceTree = "<group>"; };
+		6E5D7F93A8A94B7C84D74C1A /* OpenRouterClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenRouterClientTests.swift; sourceTree = "<group>"; };
 		4414307688FD1E4E9DEAC227 /* VesperWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VesperWidget.swift; sourceTree = "<group>"; };
 		5099A6C1FBED24F8EC2B6C06 /* FlipperFileSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlipperFileSystem.swift; sourceTree = "<group>"; };
 		522B0E627EDF79EFC91232CB /* RiskAssessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiskAssessor.swift; sourceTree = "<group>"; };
 		75766EF4374B1C14C411FA72 /* InputBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputBar.swift; sourceTree = "<group>"; };
 		75E74D563359A55CCC1AF91B /* DeviceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceView.swift; sourceTree = "<group>"; };
+		77E7F4A91C634F02A6F6D1C5 /* FlipperFileSystemValidationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlipperFileSystemValidationTests.swift; sourceTree = "<group>"; };
 		784AA332097613071A5DC380 /* VesperPrompts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VesperPrompts.swift; sourceTree = "<group>"; };
 		7CDFDCDE181C1B289CA196C6 /* OpsCenterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpsCenterView.swift; sourceTree = "<group>"; };
 		7FBDF37F2D94D675159275F4 /* SpeechRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechRecognizer.swift; sourceTree = "<group>"; };
@@ -102,6 +107,7 @@
 		C9CC14BDCEF6FFC3BCE54001 /* AuditStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuditStore.swift; sourceTree = "<group>"; };
 		CD5015535DAFAB466FC926DB /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		D3BAAF8942CF5AAB2B36D9C6 /* RiskAssessorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiskAssessorTests.swift; sourceTree = "<group>"; };
+		D4B0A3F9A17B4C76B71A2D4F /* AuditStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuditStoreTests.swift; sourceTree = "<group>"; };
 		D63DC9DAD8989B7D9A70DF89 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
 		DB1CF5CF2FD6CC2152C71311 /* ApprovalDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApprovalDialog.swift; sourceTree = "<group>"; };
 		DC2066997A30942766756276 /* OpsCenterViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpsCenterViewModel.swift; sourceTree = "<group>"; };
@@ -223,6 +229,7 @@
 		8D0F410DB73D61A0F156218C /* AITests */ = {
 			isa = PBXGroup;
 			children = (
+				6E5D7F93A8A94B7C84D74C1A /* OpenRouterClientTests.swift */,
 				3A10552A837BCFF7F7AACF92 /* VesperAgentTests.swift */,
 			);
 			path = AITests;
@@ -248,6 +255,7 @@
 		9C715F86B323D36E59BADFE8 /* BLETests */ = {
 			isa = PBXGroup;
 			children = (
+				77E7F4A91C634F02A6F6D1C5 /* FlipperFileSystemValidationTests.swift */,
 				DECB1E6F283C9C07C9CC931A /* FlipperProtocolTests.swift */,
 			);
 			path = BLETests;
@@ -303,6 +311,7 @@
 		C2F6A8760BD6B796C3075EA4 /* DomainTests */ = {
 			isa = PBXGroup;
 			children = (
+				D4B0A3F9A17B4C76B71A2D4F /* AuditStoreTests.swift */,
 				E879AF4E1B5B0EA8FC255EB4 /* InputValidatorTests.swift */,
 				D3BAAF8942CF5AAB2B36D9C6 /* RiskAssessorTests.swift */,
 			);
@@ -470,6 +479,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				318C7E7FBE2C4F7D9D3E6E44 /* OpenRouterClientTests.swift in Sources */,
+				4B2F2A1D4E7D4F3FA7A9F8C1 /* AuditStoreTests.swift in Sources */,
+				4F9B5E7C0A1D4C2BB7A5E3D1 /* FlipperFileSystemValidationTests.swift in Sources */,
 				9FF87B8BE100B4DCED59BCEE /* FlipperProtocolTests.swift in Sources */,
 				2C01DA6DDFAEC8B9616105FA /* InputValidatorTests.swift in Sources */,
 				33230AAF4D5C1E0E766C9978 /* RiskAssessorTests.swift in Sources */,

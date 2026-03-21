@@ -4,6 +4,28 @@
 import XCTest
 @testable import Vesper
 
+private struct MockSettingsStore: SettingsStoreProtocol, @unchecked Sendable {
+    var autoApproveMedium: Bool = false
+    var autoApproveHigh: Bool = false
+    var unlockedPaths: Set<String> = []
+    var scopedPaths: Set<String> = []
+
+    func isProtectedPathUnlocked(_ path: String) -> Bool {
+        unlockedPaths.contains(path)
+    }
+
+    func isPathInScope(_ path: String) -> Bool {
+        scopedPaths.contains(where: { scope in
+            let normalizedScope = scope.hasSuffix("/") ? String(scope.dropLast()) : scope
+            guard !normalizedScope.isEmpty else { return false }
+            if path == normalizedScope {
+                return true
+            }
+            return path.hasPrefix(normalizedScope + "/")
+        })
+    }
+}
+
 final class InputValidatorTests: XCTestCase {
 
     // MARK: - API Key Validation
@@ -123,6 +145,47 @@ final class InputValidatorTests: XCTestCase {
     func testPathWithWhitespaceIsTrimmed() throws {
         let result = try InputValidator.validatePath("  /ext/test.txt  ")
         XCTAssertEqual(result, "/ext/test.txt")
+    }
+
+    func testProtectedPathPassesValidationAndIsBlockedUntilUnlocked() {
+        let command = ExecuteCommand(
+            action: .readFile,
+            args: CommandArgs(path: "/int/manifest.txt"),
+            justification: "Inspect protected manifest",
+            expectedEffect: "Read protected manifest"
+        )
+
+        let validation = InputValidator.validate(command)
+        XCTAssertTrue(validation.isValid)
+        XCTAssertNil(validation.error)
+
+        var settingsStore = MockSettingsStore()
+        let assessor = RiskAssessor(settingsStore: settingsStore)
+
+        let blockedResult = assessor.assess(command)
+        XCTAssertEqual(blockedResult.level, .blocked)
+        XCTAssertNotNil(blockedResult.blockedReason)
+
+        settingsStore.unlockedPaths.insert("/int/manifest.txt")
+        let unlockedAssessor = RiskAssessor(settingsStore: settingsStore)
+        let unlockedResult = unlockedAssessor.assess(command)
+        XCTAssertEqual(unlockedResult.level, .low)
+    }
+
+    func testProtectedDestinationPathPassesValidationForCopyCommands() {
+        let command = ExecuteCommand(
+            action: .copy,
+            args: CommandArgs(
+                path: "/ext/source.txt",
+                destinationPath: "/int/manifest.txt"
+            ),
+            justification: "Copy into protected destination",
+            expectedEffect: "Copy file"
+        )
+
+        let validation = InputValidator.validate(command)
+        XCTAssertTrue(validation.isValid)
+        XCTAssertNil(validation.error)
     }
 
     // MARK: - Content Size Validation

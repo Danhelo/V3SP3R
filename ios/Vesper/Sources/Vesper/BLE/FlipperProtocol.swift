@@ -148,56 +148,81 @@ class FlipperProtocol {
     /// Build a StorageListRequest: field 1 (path) = string
     func buildStorageListRequest(path: String) -> Data {
         // Inner message: ListRequest { string path = 1; }
-        let innerMessage = encodeStringField(fieldNumber: 1, value: path)
+        let innerMessage = Self.encodeStringField(fieldNumber: 1, value: path)
         // Main message: Main { uint32 command_id = 1; StorageListRequest = field 20 }
         return buildMainMessage(contentFieldNumber: Self.fieldStorageListRequest, contentMessage: innerMessage)
     }
 
     /// Build a StorageReadRequest: field 1 (path) = string
     func buildStorageReadRequest(path: String) -> Data {
-        let innerMessage = encodeStringField(fieldNumber: 1, value: path)
+        let innerMessage = Self.encodeStringField(fieldNumber: 1, value: path)
         return buildMainMessage(contentFieldNumber: Self.fieldStorageReadRequest, contentMessage: innerMessage)
     }
 
     /// Build a StorageWriteRequest: field 1 (path) = string, field 2 (file) = File message
     func buildStorageWriteRequest(path: String, data: Data) -> Data {
+        return Self.makeStorageWriteRequest(
+            path: path,
+            data: data,
+            requestId: nextRequestId(),
+            hasNext: false
+        )
+    }
+
+    /// Backing helper for the remaining request builders that still allocate their own request IDs.
+    private func buildMainMessage(contentFieldNumber: UInt32, contentMessage: Data) -> Data {
+        return Self.buildMainMessage(
+            contentFieldNumber: contentFieldNumber,
+            contentMessage: contentMessage,
+            requestId: nextRequestId()
+        )
+    }
+
+    /// Build a StorageWriteRequest body with a caller-supplied request ID and hasNext flag.
+    /// Exposed for tests and for chunked streaming writes that must reuse the same command ID.
+    static func makeStorageWriteRequest(path: String, data: Data, requestId: UInt32, hasNext: Bool = false) -> Data {
         // File message: { FileType type = 1; string name = 2; uint32 size = 3; bytes data = 4; }
         var fileMessage = Data()
-        fileMessage.append(encodeVarintField(fieldNumber: 1, value: 0)) // FILE type = 0
+        fileMessage.append(Self.encodeVarintField(fieldNumber: 1, value: 0)) // FILE type = 0
         let fileName = (path as NSString).lastPathComponent
-        fileMessage.append(encodeStringField(fieldNumber: 2, value: fileName))
-        fileMessage.append(encodeVarintField(fieldNumber: 3, value: UInt64(data.count)))
-        fileMessage.append(encodeBytesField(fieldNumber: 4, value: data))
+        fileMessage.append(Self.encodeStringField(fieldNumber: 2, value: fileName))
+        fileMessage.append(Self.encodeVarintField(fieldNumber: 3, value: UInt64(data.count)))
+        fileMessage.append(Self.encodeBytesField(fieldNumber: 4, value: data))
 
         // WriteRequest: { string path = 1; File file = 2; }
         var innerMessage = Data()
-        innerMessage.append(encodeStringField(fieldNumber: 1, value: path))
-        innerMessage.append(encodeLengthDelimitedField(fieldNumber: 2, value: fileMessage))
+        innerMessage.append(Self.encodeStringField(fieldNumber: 1, value: path))
+        innerMessage.append(Self.encodeLengthDelimitedField(fieldNumber: 2, value: fileMessage))
 
-        return buildMainMessage(contentFieldNumber: Self.fieldStorageWriteRequest, contentMessage: innerMessage)
+        return Self.buildMainMessage(
+            contentFieldNumber: Self.fieldStorageWriteRequest,
+            contentMessage: innerMessage,
+            requestId: requestId,
+            hasNext: hasNext
+        )
     }
 
     /// Build a StorageDeleteRequest: field 1 (path) = string, field 2 (recursive) = bool
     func buildStorageDeleteRequest(path: String, recursive: Bool) -> Data {
         var innerMessage = Data()
-        innerMessage.append(encodeStringField(fieldNumber: 1, value: path))
+        innerMessage.append(Self.encodeStringField(fieldNumber: 1, value: path))
         if recursive {
-            innerMessage.append(encodeVarintField(fieldNumber: 2, value: 1)) // true
+            innerMessage.append(Self.encodeVarintField(fieldNumber: 2, value: 1)) // true
         }
         return buildMainMessage(contentFieldNumber: Self.fieldStorageDeleteRequest, contentMessage: innerMessage)
     }
 
     /// Build a StorageMkdirRequest: field 1 (path) = string
     func buildStorageMkdirRequest(path: String) -> Data {
-        let innerMessage = encodeStringField(fieldNumber: 1, value: path)
+        let innerMessage = Self.encodeStringField(fieldNumber: 1, value: path)
         return buildMainMessage(contentFieldNumber: Self.fieldStorageMkdirRequest, contentMessage: innerMessage)
     }
 
     /// Build a StorageRenameRequest (used for move): field 1 (old_path) = string, field 2 (new_path) = string
     func buildStorageRenameRequest(oldPath: String, newPath: String) -> Data {
         var innerMessage = Data()
-        innerMessage.append(encodeStringField(fieldNumber: 1, value: oldPath))
-        innerMessage.append(encodeStringField(fieldNumber: 2, value: newPath))
+        innerMessage.append(Self.encodeStringField(fieldNumber: 1, value: oldPath))
+        innerMessage.append(Self.encodeStringField(fieldNumber: 2, value: newPath))
         return buildMainMessage(contentFieldNumber: Self.fieldStorageRenameRequest, contentMessage: innerMessage)
     }
 
@@ -208,16 +233,16 @@ class FlipperProtocol {
 
     /// Build a StorageInfoRequest: field 1 (path) = string
     func buildStorageInfoRequest(path: String) -> Data {
-        let innerMessage = encodeStringField(fieldNumber: 1, value: path)
+        let innerMessage = Self.encodeStringField(fieldNumber: 1, value: path)
         return buildMainMessage(contentFieldNumber: Self.fieldStorageInfoRequest, contentMessage: innerMessage)
     }
 
     /// Build an AppStartRequest: field 1 (name) = string, field 2 (args) = string
     func buildAppStartRequest(name: String, args: String?) -> Data {
         var innerMessage = Data()
-        innerMessage.append(encodeStringField(fieldNumber: 1, value: name))
+        innerMessage.append(Self.encodeStringField(fieldNumber: 1, value: name))
         if let args, !args.isEmpty {
-            innerMessage.append(encodeStringField(fieldNumber: 2, value: args))
+            innerMessage.append(Self.encodeStringField(fieldNumber: 2, value: args))
         }
         return buildMainMessage(contentFieldNumber: Self.fieldAppStartRequest, contentMessage: innerMessage)
     }
@@ -253,7 +278,7 @@ class FlipperProtocol {
     private func listDirectory(path: String) async -> ProtocolResponse {
         // Try RPC first, fall back to legacy
         let rpcData = buildStorageListRequest(path: path)
-        let rpcFrame = wrapWithLengthPrefix(rpcData)
+        let rpcFrame = Self.wrapWithLengthPrefix(rpcData)
 
         do {
             let responseData = try await bleManager.sendFramedData(rpcFrame)
@@ -269,7 +294,7 @@ class FlipperProtocol {
 
     private func readFile(path: String) async -> ProtocolResponse {
         let rpcData = buildStorageReadRequest(path: path)
-        let rpcFrame = wrapWithLengthPrefix(rpcData)
+        let rpcFrame = Self.wrapWithLengthPrefix(rpcData)
 
         do {
             let responseData = try await bleManager.sendFramedData(rpcFrame)
@@ -294,7 +319,7 @@ class FlipperProtocol {
 
     private func writeFileSingle(path: String, data content: Data) async -> ProtocolResponse {
         let rpcData = buildStorageWriteRequest(path: path, data: content)
-        let rpcFrame = wrapWithLengthPrefix(rpcData)
+        let rpcFrame = Self.wrapWithLengthPrefix(rpcData)
 
         do {
             let responseData = try await bleManager.sendFramedData(rpcFrame)
@@ -309,25 +334,44 @@ class FlipperProtocol {
     }
 
     private func writeFileChunked(path: String, data content: Data) async -> ProtocolResponse {
-        var offset = 0
-        while offset < content.count {
-            let end = min(offset + Self.writeChunkSize, content.count)
-            let chunk = content[offset..<end]
-            let chunkData = Data(chunk)
+        let chunks = Self.splitContent(content, chunkSize: Self.writeChunkSize)
+        let requestId = nextRequestId()
 
-            let response = await writeFileSingle(path: path, data: chunkData)
-            if case .error = response {
-                return response
+        for (index, chunkData) in chunks.enumerated() {
+            let isLast = index == chunks.count - 1
+            let rpcData = Self.makeStorageWriteRequest(
+                path: path,
+                data: chunkData,
+                requestId: requestId,
+                hasNext: !isLast
+            )
+            let rpcFrame = Self.wrapWithLengthPrefix(rpcData)
+
+            do {
+                if isLast {
+                    let responseData = try await bleManager.sendFramedData(rpcFrame)
+                    let parsed = parseResponse(responseData)
+                    if case .error = parsed {
+                        return parsed
+                    }
+                    return parsed
+                } else {
+                    try await bleManager.sendData(rpcFrame)
+                    if index < chunks.count - 2 {
+                        try? await Task.sleep(nanoseconds: 25_000_000)
+                    }
+                }
+            } catch {
+                return .error("Chunked write failed: \(error.localizedDescription)", nil)
             }
-
-            offset = end
         }
+
         return .success("Written \(content.count) bytes to \(path)")
     }
 
     private func deleteFile(path: String, recursive: Bool) async -> ProtocolResponse {
         let rpcData = buildStorageDeleteRequest(path: path, recursive: recursive)
-        let rpcFrame = wrapWithLengthPrefix(rpcData)
+        let rpcFrame = Self.wrapWithLengthPrefix(rpcData)
 
         do {
             let responseData = try await bleManager.sendFramedData(rpcFrame)
@@ -347,7 +391,7 @@ class FlipperProtocol {
 
     private func createDirectory(path: String) async -> ProtocolResponse {
         let rpcData = buildStorageMkdirRequest(path: path)
-        let rpcFrame = wrapWithLengthPrefix(rpcData)
+        let rpcFrame = Self.wrapWithLengthPrefix(rpcData)
 
         do {
             let responseData = try await bleManager.sendFramedData(rpcFrame)
@@ -363,7 +407,7 @@ class FlipperProtocol {
 
     private func moveFile(sourcePath: String, destPath: String) async -> ProtocolResponse {
         let rpcData = buildStorageRenameRequest(oldPath: sourcePath, newPath: destPath)
-        let rpcFrame = wrapWithLengthPrefix(rpcData)
+        let rpcFrame = Self.wrapWithLengthPrefix(rpcData)
 
         do {
             let responseData = try await bleManager.sendFramedData(rpcFrame)
@@ -379,7 +423,7 @@ class FlipperProtocol {
 
     private func getDeviceInfo() async -> ProtocolResponse {
         let rpcData = buildSystemInfoRequest()
-        let rpcFrame = wrapWithLengthPrefix(rpcData)
+        let rpcFrame = Self.wrapWithLengthPrefix(rpcData)
 
         do {
             let responseData = try await bleManager.sendFramedData(rpcFrame)
@@ -395,7 +439,7 @@ class FlipperProtocol {
 
     private func getStorageInfo() async -> ProtocolResponse {
         let rpcData = buildStorageInfoRequest(path: "/ext")
-        let rpcFrame = wrapWithLengthPrefix(rpcData)
+        let rpcFrame = Self.wrapWithLengthPrefix(rpcData)
 
         do {
             let responseData = try await bleManager.sendFramedData(rpcFrame)
@@ -411,7 +455,7 @@ class FlipperProtocol {
 
     private func appStart(name: String, args: String?) async -> ProtocolResponse {
         let rpcData = buildAppStartRequest(name: name, args: args)
-        let rpcFrame = wrapWithLengthPrefix(rpcData)
+        let rpcFrame = Self.wrapWithLengthPrefix(rpcData)
 
         do {
             let responseData = try await bleManager.sendFramedData(rpcFrame)
@@ -493,7 +537,7 @@ class FlipperProtocol {
         frame.append(payload)
 
         // Wrap with length prefix
-        return wrapWithLengthPrefix(frame)
+        return Self.wrapWithLengthPrefix(frame)
     }
 
     // MARK: - Incoming Data Processing
@@ -505,7 +549,7 @@ class FlipperProtocol {
     // MARK: - Protobuf Wire Format Encoding
 
     /// Encode a varint (unsigned LEB128)
-    private func encodeVarint(_ value: UInt64) -> Data {
+    private static func encodeVarint(_ value: UInt64) -> Data {
         var data = Data()
         var v = value
         while v > 0x7F {
@@ -518,12 +562,12 @@ class FlipperProtocol {
     }
 
     /// Encode field tag: (field_number << 3) | wire_type
-    private func encodeTag(fieldNumber: UInt32, wireType: UInt8) -> Data {
+    private static func encodeTag(fieldNumber: UInt32, wireType: UInt8) -> Data {
         return encodeVarint(UInt64(fieldNumber) << 3 | UInt64(wireType))
     }
 
     /// Encode a varint field (wire type 0)
-    private func encodeVarintField(fieldNumber: UInt32, value: UInt64) -> Data {
+    private static func encodeVarintField(fieldNumber: UInt32, value: UInt64) -> Data {
         var data = Data()
         data.append(encodeTag(fieldNumber: fieldNumber, wireType: 0))
         data.append(encodeVarint(value))
@@ -531,7 +575,7 @@ class FlipperProtocol {
     }
 
     /// Encode a string field (wire type 2: length-delimited)
-    private func encodeStringField(fieldNumber: UInt32, value: String) -> Data {
+    private static func encodeStringField(fieldNumber: UInt32, value: String) -> Data {
         let stringBytes = value.data(using: .utf8) ?? Data()
         var data = Data()
         data.append(encodeTag(fieldNumber: fieldNumber, wireType: 2))
@@ -541,7 +585,7 @@ class FlipperProtocol {
     }
 
     /// Encode a bytes field (wire type 2: length-delimited)
-    private func encodeBytesField(fieldNumber: UInt32, value: Data) -> Data {
+    private static func encodeBytesField(fieldNumber: UInt32, value: Data) -> Data {
         var data = Data()
         data.append(encodeTag(fieldNumber: fieldNumber, wireType: 2))
         data.append(encodeVarint(UInt64(value.count)))
@@ -550,7 +594,7 @@ class FlipperProtocol {
     }
 
     /// Encode a length-delimited sub-message field (wire type 2)
-    private func encodeLengthDelimitedField(fieldNumber: UInt32, value: Data) -> Data {
+    private static func encodeLengthDelimitedField(fieldNumber: UInt32, value: Data) -> Data {
         var data = Data()
         data.append(encodeTag(fieldNumber: fieldNumber, wireType: 2))
         data.append(encodeVarint(UInt64(value.count)))
@@ -560,35 +604,57 @@ class FlipperProtocol {
 
     /// Build a Flipper.Main protobuf message wrapping a content message.
     /// Main { uint32 command_id = 1; CommandStatus command_status = 2; bool has_next = 3; <content> }
-    private func buildMainMessage(contentFieldNumber: UInt32, contentMessage: Data) -> Data {
-        let reqId = nextRequestId()
+    private static func buildMainMessage(
+        contentFieldNumber: UInt32,
+        contentMessage: Data,
+        requestId: UInt32,
+        hasNext: Bool = false
+    ) -> Data {
         var message = Data()
 
         // Field 1: command_id (varint)
-        message.append(encodeVarintField(fieldNumber: Self.fieldCommandId, value: UInt64(reqId)))
+        message.append(Self.encodeVarintField(fieldNumber: Self.fieldCommandId, value: UInt64(requestId)))
 
         // Field 2: command_status = OK (0) -- omitted, default is 0
-
-        // Field 3: has_next = false -- omitted, default is false
+        if hasNext {
+            message.append(Self.encodeVarintField(fieldNumber: Self.fieldHasNext, value: 1))
+        }
 
         // Content field (length-delimited sub-message)
         if !contentMessage.isEmpty {
-            message.append(encodeLengthDelimitedField(fieldNumber: contentFieldNumber, value: contentMessage))
+            message.append(Self.encodeLengthDelimitedField(fieldNumber: contentFieldNumber, value: contentMessage))
         } else {
             // Empty sub-message: still need the tag with zero length
-            message.append(encodeTag(fieldNumber: contentFieldNumber, wireType: 2))
-            message.append(encodeVarint(0))
+            message.append(Self.encodeTag(fieldNumber: contentFieldNumber, wireType: 2))
+            message.append(Self.encodeVarint(0))
         }
 
         return message
     }
 
     /// Wrap data with a 4-byte little-endian length prefix (legacy frame format).
-    private func wrapWithLengthPrefix(_ data: Data) -> Data {
+    private static func wrapWithLengthPrefix(_ data: Data) -> Data {
         var frame = Data()
         frame.append(contentsOf: withUnsafeBytes(of: UInt32(data.count).littleEndian) { Data($0) })
         frame.append(data)
         return frame
+    }
+
+    /// Split a blob into deterministic chunks used by the streaming write path.
+    static func splitContent(_ content: Data, chunkSize: Int = 512) -> [Data] {
+        guard !content.isEmpty else { return [] }
+
+        var chunks: [Data] = []
+        chunks.reserveCapacity((content.count + chunkSize - 1) / chunkSize)
+
+        var offset = 0
+        while offset < content.count {
+            let end = min(offset + chunkSize, content.count)
+            chunks.append(content[offset..<end])
+            offset = end
+        }
+
+        return chunks
     }
 
     // MARK: - Response Parsing Helpers

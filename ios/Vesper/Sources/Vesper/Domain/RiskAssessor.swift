@@ -125,11 +125,12 @@ final class RiskAssessor: Sendable {
                 )
             }
 
+        // LOW risk: directory creation in scope, MEDIUM if out of scope
         case .createDirectory:
             let path = command.args.path ?? ""
             if settingsStore.isPathInScope(path) {
                 return RiskAssessment(
-                    level: .medium,
+                    level: .low,
                     reason: "Directory creation in scope",
                     affectedPaths: paths,
                     requiresDiff: false,
@@ -137,7 +138,7 @@ final class RiskAssessor: Sendable {
                 )
             } else {
                 return RiskAssessment(
-                    level: .high,
+                    level: .medium,
                     reason: "Directory creation outside scope",
                     affectedPaths: paths,
                     requiresDiff: false,
