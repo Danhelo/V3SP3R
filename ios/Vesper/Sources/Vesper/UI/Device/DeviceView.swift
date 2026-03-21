@@ -200,7 +200,7 @@ struct DeviceView: View {
                     .foregroundStyle(.secondary)
             }
             ProgressView(value: Double(used), total: Double(total))
-                .tint(Double(used) / Double(total) > 0.9 ? .red : .accentColor)
+                .tint(Double(used) / Double(total) > 0.9 ? Color.red : Color.accentColor)
         }
     }
 

@@ -292,7 +292,7 @@ final class OpenRouterClient: @unchecked Sendable {
                 if let attachments = message.imageAttachments, !attachments.isEmpty {
                     // Multimodal message with images
                     var contentParts: [[String: Any]] = []
-                    if !message.content.isEmpty {
+                    if !(message.content?.isEmpty ?? true) {
                         contentParts.append([
                             "type": "text",
                             "text": message.content

@@ -80,7 +80,7 @@ struct OpsCenterView: View {
                         }
                         Spacer()
                         Image(systemName: "play.circle")
-                            .foregroundStyle(.accentColor)
+                            .foregroundStyle(Color.accentColor)
                     }
                 }
                 .tint(.primary)

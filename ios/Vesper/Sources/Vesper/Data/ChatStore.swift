@@ -43,7 +43,7 @@ struct ChatSessionSummary: Sendable, Identifiable {
 // MARK: - Chat Store
 
 /// Provides save, load, delete, and list operations for chat sessions.
-final class ChatStore {
+final class ChatStore: ChatStoreProtocol {
 
     private let modelContainer: ModelContainer
 

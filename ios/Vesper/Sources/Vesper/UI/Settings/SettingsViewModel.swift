@@ -17,14 +17,20 @@ class SettingsViewModel {
     var saveError: String?
 
     static let availableModels: [(id: String, name: String)] = [
-        ("anthropic/claude-sonnet-4-20250514", "Claude Sonnet 4"),
-        ("anthropic/claude-opus-4-20250514", "Claude Opus 4"),
-        ("openai/gpt-4o", "GPT-4o"),
-        ("openai/gpt-4o-mini", "GPT-4o Mini"),
-        ("google/gemini-2.0-flash-001", "Gemini 2.0 Flash"),
-        ("google/gemini-2.5-pro-preview", "Gemini 2.5 Pro"),
-        ("meta-llama/llama-3.3-70b-instruct", "Llama 3.3 70B"),
-        ("x-ai/grok-3-mini-beta", "Grok 3 Mini"),
+        // Top tier — best tool calling
+        ("nousresearch/hermes-4-405b", "Hermes 4 405B"),
+        ("anthropic/claude-sonnet-4.6", "Claude Sonnet 4.6"),
+        ("anthropic/claude-opus-4.6", "Claude Opus 4.6"),
+        ("anthropic/claude-sonnet-4.5", "Claude Sonnet 4.5"),
+        ("google/gemini-2.5-flash", "Gemini 2.5 Flash"),
+        ("google/gemini-2.5-pro", "Gemini 2.5 Pro"),
+        ("openai/o4-mini", "OpenAI o4 Mini"),
+        // Strong alternatives
+        ("deepseek/deepseek-v3.2", "DeepSeek V3.2"),
+        ("x-ai/grok-4-fast", "Grok 4 Fast"),
+        ("meta-llama/llama-4-maverick-17b-128e-instruct", "Llama 4 Maverick"),
+        ("mistralai/devstral-medium-2507", "Devstral Medium"),
+        ("deepseek/deepseek-r1", "DeepSeek R1"),
     ]
 
     init(settingsStore: SettingsStore, secureStorage: SecureStorage) {

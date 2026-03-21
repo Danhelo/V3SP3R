@@ -23,7 +23,7 @@ final class SettingsStore: SettingsStoreProtocol, @unchecked Sendable {
 
     // MARK: - Defaults
 
-    static let defaultModel = "anthropic/claude-sonnet-4-20250514"
+    static let defaultModel = "nousresearch/hermes-4-405b"
 
     // MARK: - Storage
 

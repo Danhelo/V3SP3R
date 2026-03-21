@@ -48,7 +48,7 @@ struct FapApp: Identifiable, Codable {
 
 @Observable
 class FapHubViewModel {
-    private let commandExecutor: CommandExecutor
+    private let commandExecutor: CommandExecuting
 
     var searchQuery: String = ""
     var apps: [FapApp] = []
@@ -59,7 +59,7 @@ class FapHubViewModel {
 
     let categories = ["All", "Tools", "Games", "GPIO", "NFC", "Sub-GHz", "Infrared", "RFID", "BadUSB", "Media"]
 
-    init(commandExecutor: CommandExecutor) {
+    init(commandExecutor: CommandExecuting) {
         self.commandExecutor = commandExecutor
     }
 

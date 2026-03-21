@@ -7,7 +7,7 @@ import os.log
 
 private let logger = Logger(subsystem: "com.vesper.flipper", category: "FileSystem")
 
-class FlipperFileSystem {
+class FlipperFileSystem: FlipperFileSystemProtocol, @unchecked Sendable {
 
     private let flipperProtocol: FlipperProtocol
 

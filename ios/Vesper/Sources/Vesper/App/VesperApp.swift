@@ -3,20 +3,20 @@ import SwiftData
 
 @main
 struct VesperApp: App {
-    @State private var serviceLocator = ServiceLocator()
+    @StateObject private var serviceLocator = ServiceLocator()
 
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environment(serviceLocator)
+                .environmentObject(serviceLocator)
         }
         .modelContainer(for: [ChatSessionEntity.self, AuditEntryEntity.self])
     }
 }
 
 /// Manual dependency injection container (replaces Hilt DI from Android)
-@Observable
-class ServiceLocator {
+@MainActor
+class ServiceLocator: ObservableObject {
     // Data layer
     let secureStorage = SecureStorage()
     let settingsStore = SettingsStore()
@@ -89,46 +89,41 @@ class ServiceLocator {
 }
 
 struct ContentView: View {
-    @Environment(ServiceLocator.self) private var services
+    @EnvironmentObject var services: ServiceLocator
 
     var body: some View {
         TabView {
-            Tab("Chat", systemImage: "message.fill") {
-                NavigationStack {
-                    ChatView(viewModel: services.chatViewModel)
-                }
+            NavigationStack {
+                ChatView(viewModel: services.chatViewModel)
             }
+            .tabItem { Label("Chat", systemImage: "message.fill") }
 
-            Tab("Device", systemImage: "flipphone") {
-                NavigationStack {
-                    DeviceView(viewModel: services.deviceViewModel)
-                }
+            NavigationStack {
+                DeviceView(viewModel: services.deviceViewModel)
             }
+            .tabItem { Label("Device", systemImage: "flipphone") }
 
-            Tab("Ops", systemImage: "gauge.with.dots.needle.33percent") {
-                NavigationStack {
-                    OpsCenterView(viewModel: services.opsCenterViewModel)
-                }
+            NavigationStack {
+                OpsCenterView(viewModel: services.opsCenterViewModel)
             }
+            .tabItem { Label("Ops", systemImage: "gauge.with.dots.needle.33percent") }
 
-            Tab("Tools", systemImage: "wrench.and.screwdriver") {
-                NavigationStack {
-                    ToolsMenuView()
-                }
+            NavigationStack {
+                ToolsMenuView()
             }
+            .tabItem { Label("Tools", systemImage: "wrench.and.screwdriver") }
 
-            Tab("Settings", systemImage: "gear") {
-                NavigationStack {
-                    SettingsView(viewModel: services.settingsViewModel)
-                }
+            NavigationStack {
+                SettingsView(viewModel: services.settingsViewModel)
             }
+            .tabItem { Label("Settings", systemImage: "gear") }
         }
         .tint(.purple)
     }
 }
 
 struct ToolsMenuView: View {
-    @Environment(ServiceLocator.self) private var services
+    @EnvironmentObject var services: ServiceLocator
 
     var body: some View {
         List {

@@ -40,7 +40,7 @@ struct InputBar: View {
                 Button(action: onVoice) {
                     Image(systemName: isRecording ? "mic.fill" : "mic")
                         .font(.title3)
-                        .foregroundStyle(isRecording ? .red : .accentColor)
+                        .foregroundStyle(isRecording ? Color.red : Color.accentColor)
                         .symbolEffect(.pulse, isActive: isRecording)
                 }
                 .disabled(isLoading)
@@ -48,7 +48,7 @@ struct InputBar: View {
                 Button(action: onSend) {
                     Image(systemName: "arrow.up.circle.fill")
                         .font(.title2)
-                        .foregroundStyle(.accentColor)
+                        .foregroundStyle(Color.accentColor)
                 }
                 .disabled(isLoading || text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }

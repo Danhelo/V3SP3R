@@ -3,7 +3,7 @@ import SwiftUI
 @Observable
 class OpsCenterViewModel {
     private let bleManager: FlipperBLEManager
-    private let commandExecutor: CommandExecutor
+    private let commandExecutor: CommandExecuting
     private let auditService: AuditService
 
     var isDeviceConnected: Bool {
@@ -29,7 +29,7 @@ class OpsCenterViewModel {
         ("security_scan", "Security Scan", "Check for sensitive files, validate paths", "lock.shield"),
     ]
 
-    init(bleManager: FlipperBLEManager, commandExecutor: CommandExecutor, auditService: AuditService) {
+    init(bleManager: FlipperBLEManager, commandExecutor: CommandExecuting, auditService: AuditService) {
         self.bleManager = bleManager
         self.commandExecutor = commandExecutor
         self.auditService = auditService

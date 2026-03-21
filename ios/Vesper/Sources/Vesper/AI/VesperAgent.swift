@@ -5,22 +5,12 @@
 import Foundation
 import Observation
 
-// MARK: - Chat Session Summary
-
-struct ChatSessionSummary: Identifiable, Sendable {
-    let id: String
-    let createdAt: Date
-    let deviceName: String?
-    let messageCount: Int
-    let lastMessage: String?
-}
-
 // MARK: - Protocol Stubs
 // These protocols define the interfaces that concrete implementations must provide.
 // They allow VesperAgent to function without coupling to specific BLE/storage implementations.
 
 /// Executes commands against the Flipper Zero device.
-protocol CommandExecutor: Sendable {
+protocol CommandExecuting: Sendable {
     func execute(_ command: ExecuteCommand, sessionId: String) async -> CommandResult
     func approve(_ approvalId: String, sessionId: String) async -> CommandResult
     func reject(_ approvalId: String, sessionId: String) async -> CommandResult
@@ -28,75 +18,19 @@ protocol CommandExecutor: Sendable {
 }
 
 /// Audit logging service for security tracking.
-protocol AuditService: Sendable {
-    func startSession(_ deviceName: String?)
+protocol AuditServiceProtocol: Sendable {
+    var currentSessionId: String? { get }
+    func startSession(deviceName: String?)
     func endSession()
     func log(_ entry: AuditEntry)
 }
 
 /// Persistence layer for chat sessions.
-protocol ChatStore: Sendable {
-    func saveMessages(_ messages: [ChatMessage], sessionId: String) async
-    func loadMessages(sessionId: String) async -> [ChatMessage]
-    func deleteSession(_ sessionId: String) async
-    func listSessions() async -> [ChatSessionSummary]
-}
-
-/// Validates commands before execution.
-enum InputValidator {
-    /// Validate an ExecuteCommand for safety and correctness.
-    static func validate(_ command: ExecuteCommand) -> (isValid: Bool, error: String?) {
-        // Check for blocked paths
-        if let path = command.args.path {
-            if ProtectedPaths.isProtected(path) {
-                return (false, "Path '\(path)' is protected. Unlock in Settings to proceed.")
-            }
-        }
-
-        if let destPath = command.args.destinationPath {
-            if ProtectedPaths.isSystemPath(destPath) {
-                return (false, "Destination path '\(destPath)' is in protected system storage.")
-            }
-        }
-
-        // Validate action-specific requirements
-        switch command.action {
-        case .readFile, .delete, .listDirectory, .createDirectory:
-            if command.args.path == nil || command.args.path?.isEmpty == true {
-                return (false, "Action '\(command.action.rawValue)' requires a 'path' argument.")
-            }
-        case .writeFile:
-            if command.args.path == nil || command.args.path?.isEmpty == true {
-                return (false, "Action 'write_file' requires a 'path' argument.")
-            }
-            // content can be empty for creating empty files
-        case .move, .copy:
-            if command.args.path == nil || command.args.destinationPath == nil {
-                return (false, "Action '\(command.action.rawValue)' requires both 'path' and 'destination_path'.")
-            }
-        case .rename:
-            if command.args.path == nil || command.args.newName == nil {
-                return (false, "Action 'rename' requires 'path' and 'new_name' arguments.")
-            }
-        case .subghzTransmit, .irTransmit, .nfcEmulate, .rfidEmulate, .ibuttonEmulate, .badusbExecute:
-            if command.args.path == nil || command.args.path?.isEmpty == true {
-                return (false, "Action '\(command.action.rawValue)' requires a file 'path'.")
-            }
-        case .launchApp:
-            if (command.args.appName == nil || command.args.appName?.isEmpty == true) &&
-               (command.args.command == nil || command.args.command?.isEmpty == true) {
-                return (false, "Action 'launch_app' requires 'app_name'.")
-            }
-        case .forgePayload:
-            if command.args.prompt == nil || command.args.prompt?.isEmpty == true {
-                return (false, "Action 'forge_payload' requires a 'prompt' describing what to create.")
-            }
-        default:
-            break
-        }
-
-        return (true, nil)
-    }
+protocol ChatStoreProtocol {
+    @MainActor func save(sessionId: String, messages: [ChatMessage], deviceName: String?) throws
+    @MainActor func loadMessages(sessionId: String) throws -> [ChatMessage]
+    @MainActor func deleteSession(sessionId: String) throws
+    @MainActor func listSessions() throws -> [ChatSessionSummary]
 }
 
 // MARK: - Vesper Agent
@@ -107,9 +41,9 @@ enum InputValidator {
 final class VesperAgent {
 
     private let openRouterClient: OpenRouterClient
-    private let commandExecutor: CommandExecutor
-    private let auditService: AuditService
-    private let chatStore: ChatStore
+    private let commandExecutor: CommandExecuting
+    private let auditService: AuditServiceProtocol
+    private let chatStore: ChatStoreProtocol
     private let settingsStore: SettingsStore
 
     /// Current conversation state, observed by SwiftUI views.
@@ -128,9 +62,9 @@ final class VesperAgent {
 
     init(
         openRouterClient: OpenRouterClient,
-        commandExecutor: CommandExecutor,
-        auditService: AuditService,
-        chatStore: ChatStore,
+        commandExecutor: CommandExecuting,
+        auditService: AuditServiceProtocol,
+        chatStore: ChatStoreProtocol,
         settingsStore: SettingsStore
     ) {
         self.openRouterClient = openRouterClient
@@ -146,7 +80,7 @@ final class VesperAgent {
     func startNewSession(deviceName: String? = nil) {
         currentSessionId = UUID().uuidString
         conversationState = ConversationState(sessionId: currentSessionId)
-        auditService.startSession(deviceName)
+        auditService.startSession(deviceName: deviceName)
     }
 
     /// Send a user message and process the AI response loop.
@@ -174,7 +108,7 @@ final class VesperAgent {
         }
 
         // Persist after completion
-        await chatStore.saveMessages(conversationState.messages, sessionId: currentSessionId)
+        try? await chatStore.save(sessionId: currentSessionId, messages: conversationState.messages, deviceName: nil)
     }
 
     /// Retry the last failed exchange by rolling back to the last safe point.
@@ -212,7 +146,7 @@ final class VesperAgent {
         )
 
         await processAIResponse(&messages)
-        await chatStore.saveMessages(conversationState.messages, sessionId: currentSessionId)
+        try? await chatStore.save(sessionId: currentSessionId, messages: conversationState.messages, deviceName: nil)
     }
 
     /// Continue after the user approves or rejects a pending action.
@@ -254,12 +188,12 @@ final class VesperAgent {
         )
 
         await processAIResponse(&messages)
-        await chatStore.saveMessages(conversationState.messages, sessionId: currentSessionId)
+        try? await chatStore.save(sessionId: currentSessionId, messages: conversationState.messages, deviceName: nil)
     }
 
     /// Load a previously saved session.
     func loadSession(_ sessionId: String) async {
-        let messages = await chatStore.loadMessages(sessionId: sessionId)
+        let messages = (try? await chatStore.loadMessages(sessionId: sessionId)) ?? []
         guard !messages.isEmpty else { return }
 
         currentSessionId = sessionId
@@ -271,7 +205,7 @@ final class VesperAgent {
 
     /// Delete a saved session.
     func deleteSession(_ sessionId: String) async {
-        await chatStore.deleteSession(sessionId)
+        try? await chatStore.deleteSession(sessionId: sessionId)
         if sessionId == currentSessionId {
             startNewSession()
         }
@@ -279,7 +213,7 @@ final class VesperAgent {
 
     /// List all saved chat sessions.
     func listSessions() async -> [ChatSessionSummary] {
-        return await chatStore.listSessions()
+        return (try? await chatStore.listSessions()) ?? []
     }
 
     // MARK: - AI Response Loop

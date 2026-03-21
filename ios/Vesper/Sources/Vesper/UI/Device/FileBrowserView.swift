@@ -140,7 +140,7 @@ struct FileBrowserView: View {
                         viewModel.loadDirectory()
                     }
                     .font(.caption.monospaced())
-                    .foregroundStyle(index == viewModel.pathHistory.count - 1 ? .primary : .accentColor)
+                    .foregroundStyle(index == viewModel.pathHistory.count - 1 ? Color.primary : Color.accentColor)
                 }
             }
             .padding(.horizontal, 12)
@@ -170,7 +170,7 @@ struct FileBrowserView: View {
                 } label: {
                     HStack {
                         Image(systemName: entry.isDirectory ? "folder.fill" : fileIcon(entry.name))
-                            .foregroundStyle(entry.isDirectory ? .yellow : .accentColor)
+                            .foregroundStyle(entry.isDirectory ? Color.yellow : Color.accentColor)
                             .frame(width: 24)
                         VStack(alignment: .leading) {
                             Text(entry.name)

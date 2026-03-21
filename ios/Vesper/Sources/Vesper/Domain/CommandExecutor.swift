@@ -9,16 +9,16 @@ import Observation
 
 /// Protocol for Flipper Zero file system operations.
 /// Concrete implementation lives in the BLE layer.
-protocol FlipperFileSystem: Sendable {
+protocol FlipperFileSystemProtocol: Sendable {
     func listDirectory(_ path: String) async throws -> [FileEntry]
     func readFile(_ path: String) async throws -> String
     func writeFile(_ path: String, content: String) async throws -> Int64
-    func writeFileBytes(_ path: String, data: Data) async throws -> Int64
+    func writeFileBytes(_ path: String, content: Data) async throws -> Int64
     func createDirectory(_ path: String) async throws
     func delete(_ path: String, recursive: Bool) async throws
-    func move(_ source: String, destination: String) async throws
-    func copy(_ source: String, destination: String) async throws
-    func rename(_ path: String, newName: String) async throws
+    func move(from source: String, to destination: String) async throws
+    func copy(from source: String, to destination: String) async throws
+    func rename(path: String, newName: String) async throws
     func getDeviceInfo() async throws -> DeviceInfo
     func getStorageInfo() async throws -> StorageInfo
     func sendCliCommand(_ command: String) async throws -> String
@@ -36,13 +36,13 @@ typealias PhotoCaptureCallback = (String?) async -> String?
 ///
 /// Key principle: The model issues commands, iOS decides what executes.
 @Observable
-final class CommandExecutor {
+final class CommandExecutor: CommandExecuting {
 
     // MARK: - Dependencies
 
-    private let fileSystem: FlipperFileSystem
+    private let fileSystem: FlipperFileSystemProtocol
     private let riskAssessor: RiskAssessor
-    private let auditService: AuditService
+    private let auditService: AuditServiceProtocol
     private let settingsStore: SettingsStore
 
     // MARK: - State
@@ -61,9 +61,9 @@ final class CommandExecutor {
     // MARK: - Init
 
     init(
-        fileSystem: FlipperFileSystem,
+        fileSystem: FlipperFileSystemProtocol,
         riskAssessor: RiskAssessor,
-        auditService: AuditService,
+        auditService: AuditServiceProtocol,
         settingsStore: SettingsStore
     ) {
         self.fileSystem = fileSystem
@@ -263,6 +263,34 @@ final class CommandExecutor {
         ))
     }
 
+    func approve(_ approvalId: String, sessionId: String) async -> CommandResult {
+        await approveCommand(approvalId)
+    }
+
+    func reject(_ approvalId: String, sessionId: String) async -> CommandResult {
+        clearExpiredApprovals()
+
+        guard pendingApprovals[approvalId] != nil else {
+            return CommandResult(
+                success: false,
+                action: .listDirectory,
+                error: "Approval not found or expired"
+            )
+        }
+
+        denyCommand(approvalId)
+        return CommandResult(
+            success: false,
+            action: .listDirectory,
+            error: "Command rejected by user"
+        )
+    }
+
+    func getPendingApproval(_ approvalId: String) -> PendingApproval? {
+        clearExpiredApprovals()
+        return pendingApprovals[approvalId]
+    }
+
     // MARK: - Direct Execution
 
     private func executeDirectly(
@@ -361,9 +389,9 @@ final class CommandExecutor {
                 diff: diff,
                 message: "Awaiting user approval for \(riskAssessment.reason)"
             ),
+            executionTimeMs: currentTimeMs() - startTime,
             requiresConfirmation: true,
-            pendingApprovalId: approval.id,
-            executionTimeMs: currentTimeMs() - startTime
+            pendingApprovalId: approval.id
         )
     }
 
@@ -404,13 +432,13 @@ final class CommandExecutor {
         case .move:
             let source = try requirePath(command)
             let dest = try requireDestinationPath(command)
-            try await fileSystem.move(source, destination: dest)
+            try await fileSystem.move(from: source, to: dest)
             return CommandResultData(message: "Moved: \(source) -> \(dest)")
 
         case .copy:
             let source = try requirePath(command)
             let dest = try requireDestinationPath(command)
-            try await fileSystem.copy(source, destination: dest)
+            try await fileSystem.copy(from: source, to: dest)
             return CommandResultData(message: "Copied: \(source) -> \(dest)")
 
         case .rename:
@@ -418,7 +446,7 @@ final class CommandExecutor {
             guard let newName = command.args.newName, !newName.isEmpty else {
                 throw CommandError.missingArgument("new_name")
             }
-            try await fileSystem.rename(path, newName: newName)
+            try await fileSystem.rename(path: path, newName: newName)
             return CommandResultData(message: "Renamed to: \(newName)")
 
         // ── Device Info ─────────────────────────────────────────
@@ -455,7 +483,7 @@ final class CommandExecutor {
             guard let decoded = Data(base64Encoded: artifactData) else {
                 throw CommandError.invalidArgument("Invalid Base64 artifact data")
             }
-            let bytesWritten = try await fileSystem.writeFileBytes(path, data: decoded)
+            let bytesWritten = try await fileSystem.writeFileBytes(path, content: decoded)
             return CommandResultData(
                 bytesWritten: bytesWritten,
                 message: "Artifact pushed: \(path)"
@@ -713,11 +741,11 @@ final class CommandExecutor {
         let sanitizedId = appId.replacingOccurrences(of: "/", with: "_")
             .replacingOccurrences(of: "..", with: "")
         let targetPath = "\(installDir)/\(sanitizedId).fap"
-        let bytesWritten = try await fileSystem.writeFileBytes(targetPath, data: data)
+        let bytesWritten = try await fileSystem.writeFileBytes(targetPath, content: data)
 
         return CommandResultData(
-            bytesWritten: bytesWritten,
             content: "installed_app=\(appId)\ntarget_path=\(targetPath)\nsource_url=\(sourceUrl)",
+            bytesWritten: bytesWritten,
             message: "Installed \(appId) to \(targetPath)"
         )
     }
@@ -791,7 +819,7 @@ final class CommandExecutor {
                 message: "Downloaded and saved to \(destinationPath)"
             )
         } else {
-            let bytesWritten = try await fileSystem.writeFileBytes(destinationPath, data: data)
+            let bytesWritten = try await fileSystem.writeFileBytes(destinationPath, content: data)
             return CommandResultData(
                 bytesWritten: bytesWritten,
                 message: "Downloaded binary and saved to \(destinationPath)"

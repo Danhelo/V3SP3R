@@ -19,7 +19,7 @@ protocol AuditStoreProtocol: Sendable {
 
 /// Central audit logging service. All command executions, approvals, and rejections
 /// flow through here to create an immutable audit trail.
-final class AuditService: @unchecked Sendable {
+final class AuditService: @unchecked Sendable, AuditServiceProtocol {
 
     private let store: AuditStoreProtocol
     private let lock = NSLock()

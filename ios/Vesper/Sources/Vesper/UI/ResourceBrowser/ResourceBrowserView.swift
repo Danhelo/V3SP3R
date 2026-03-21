@@ -141,7 +141,7 @@ struct ResourceBrowserView: View {
                     } else {
                         HStack {
                             Image(systemName: "doc")
-                                .foregroundStyle(.accentColor)
+                                .foregroundStyle(Color.accentColor)
                             VStack(alignment: .leading) {
                                 Text(entry.name)
                                     .font(.body.monospaced())

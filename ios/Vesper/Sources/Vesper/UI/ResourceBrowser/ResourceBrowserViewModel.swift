@@ -27,7 +27,7 @@ struct RepoFileEntry: Identifiable {
 
 @Observable
 class ResourceBrowserViewModel {
-    private let commandExecutor: CommandExecutor
+    private let commandExecutor: CommandExecuting
 
     var repos: [ResourceRepo] = ResourceRepo.knownRepos
     var selectedRepo: ResourceRepo?
@@ -39,7 +39,7 @@ class ResourceBrowserViewModel {
     var error: String?
     var searchQuery: String = ""
 
-    init(commandExecutor: CommandExecutor) {
+    init(commandExecutor: CommandExecuting) {
         self.commandExecutor = commandExecutor
     }
 

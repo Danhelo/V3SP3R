@@ -90,6 +90,55 @@ enum InputValidator {
         return true
     }
 
+    // MARK: - Command Validation
+
+    /// Validate an ExecuteCommand for safety and required arguments.
+    static func validate(_ command: ExecuteCommand) -> (isValid: Bool, error: String?) {
+        if let path = command.args.path, ProtectedPaths.isProtected(path) {
+            return (false, "Path '\(path)' is protected. Unlock in Settings to proceed.")
+        }
+
+        if let destPath = command.args.destinationPath, ProtectedPaths.isSystemPath(destPath) {
+            return (false, "Destination path '\(destPath)' is in protected system storage.")
+        }
+
+        switch command.action {
+        case .readFile, .delete, .listDirectory, .createDirectory:
+            if command.args.path == nil || command.args.path?.isEmpty == true {
+                return (false, "Action '\(command.action.rawValue)' requires a 'path' argument.")
+            }
+        case .writeFile:
+            if command.args.path == nil || command.args.path?.isEmpty == true {
+                return (false, "Action 'write_file' requires a 'path' argument.")
+            }
+        case .move, .copy:
+            if command.args.path == nil || command.args.destinationPath == nil {
+                return (false, "Action '\(command.action.rawValue)' requires both 'path' and 'destination_path'.")
+            }
+        case .rename:
+            if command.args.path == nil || command.args.newName == nil {
+                return (false, "Action 'rename' requires 'path' and 'new_name' arguments.")
+            }
+        case .subghzTransmit, .irTransmit, .nfcEmulate, .rfidEmulate, .ibuttonEmulate, .badusbExecute:
+            if command.args.path == nil || command.args.path?.isEmpty == true {
+                return (false, "Action '\(command.action.rawValue)' requires a file 'path'.")
+            }
+        case .launchApp:
+            if (command.args.appName == nil || command.args.appName?.isEmpty == true) &&
+                (command.args.command == nil || command.args.command?.isEmpty == true) {
+                return (false, "Action 'launch_app' requires 'app_name'.")
+            }
+        case .forgePayload:
+            if command.args.prompt == nil || command.args.prompt?.isEmpty == true {
+                return (false, "Action 'forge_payload' requires a 'prompt' describing what to create.")
+            }
+        default:
+            break
+        }
+
+        return (true, nil)
+    }
+
     // MARK: - Command Sanitization
 
     /// Sanitizes a command by cleaning up paths, stripping injection attempts from
@@ -191,6 +240,40 @@ enum InputValidator {
                 red: args.red,
                 green: args.green,
                 blue: args.blue,
+                repoId: args.repoId,
+                subPath: args.subPath,
+                downloadUrl: args.downloadUrl,
+                searchScope: args.searchScope,
+                photoPrompt: args.photoPrompt
+            )
+        }
+
+        // Always clamp color values to 0-255 range
+        if args.red != nil || args.green != nil || args.blue != nil {
+            args = CommandArgs(
+                command: args.command,
+                path: args.path,
+                destinationPath: args.destinationPath,
+                content: args.content,
+                newName: args.newName,
+                recursive: args.recursive,
+                artifactType: args.artifactType,
+                artifactData: args.artifactData,
+                prompt: args.prompt,
+                resourceType: args.resourceType,
+                runbookId: args.runbookId,
+                payloadType: args.payloadType,
+                filter: args.filter,
+                appName: args.appName,
+                appArgs: args.appArgs,
+                frequency: args.frequency,
+                protocol: args.protocol,
+                address: args.address,
+                signalName: args.signalName,
+                enabled: args.enabled,
+                red: args.red.map { max(0, min(255, $0)) },
+                green: args.green.map { max(0, min(255, $0)) },
+                blue: args.blue.map { max(0, min(255, $0)) },
                 repoId: args.repoId,
                 subPath: args.subPath,
                 downloadUrl: args.downloadUrl,
