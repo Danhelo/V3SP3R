@@ -701,7 +701,9 @@ final class CommandExecutor: CommandExecuting {
             )
         }
 
-        let content = String(data: data, encoding: .utf8) ?? "No results"
+        let content = formatFapHubSearchResults(data: data, query: query)
+            ?? String(data: data, encoding: .utf8)
+            ?? "No results"
         return CommandResultData(
             content: content,
             message: "FapHub search returned results for \"\(query)\""
@@ -709,23 +711,17 @@ final class CommandExecutor: CommandExecuting {
     }
 
     private func executeFapHubInstall(appId: String, downloadUrl: String?) async throws -> CommandResultData {
-        // Resolve download URL
-        let sourceUrl: String
-        if let directUrl = downloadUrl, !directUrl.isEmpty {
-            sourceUrl = directUrl
-        } else {
-            // Try the catalog API
-            sourceUrl = "https://catalog.flipperzero.one/api/v0/application/\(appId)/build/last"
-        }
+        let trimmedDownloadUrl = downloadUrl?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let sourceUrl = ((trimmedDownloadUrl?.isEmpty == false) ? trimmedDownloadUrl : nil)
+            ?? "https://catalog.flipperzero.one/api/v0/application/\(appId)/build/last"
 
-        guard let url = URL(string: sourceUrl) else {
+        guard let initialURL = URL(string: sourceUrl) else {
             throw CommandError.invalidArgument("Invalid download URL: \(sourceUrl)")
         }
 
-        let (data, response) = try await URLSession.shared.data(from: url)
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw CommandError.networkError("Failed to download FAP: HTTP \((response as? HTTPURLResponse)?.statusCode ?? 0)")
-        }
+        let download = try await downloadFapBinary(from: initialURL, appIdHint: appId)
+        let data = download.data
+        let resolvedUrl = download.resolvedURL.absoluteString
 
         guard !data.isEmpty else {
             throw CommandError.networkError("Downloaded file is empty")
@@ -736,15 +732,14 @@ final class CommandExecutor: CommandExecuting {
             throw CommandError.invalidArgument("Downloaded file too large (\(data.count) bytes)")
         }
 
-        let installDir = "/ext/apps/misc"
+        let installDir = inferFapInstallDirectory(appId: appId, sourceUrl: resolvedUrl)
         try? await fileSystem.createDirectory(installDir)
-        let sanitizedId = appId.replacingOccurrences(of: "/", with: "_")
-            .replacingOccurrences(of: "..", with: "")
+        let sanitizedId = sanitizeFileName(appId)
         let targetPath = "\(installDir)/\(sanitizedId).fap"
         let bytesWritten = try await fileSystem.writeFileBytes(targetPath, content: data)
 
         return CommandResultData(
-            content: "installed_app=\(appId)\ntarget_path=\(targetPath)\nsource_url=\(sourceUrl)",
+            content: "installed_app=\(appId)\ntarget_path=\(targetPath)\nsource_url=\(resolvedUrl)",
             bytesWritten: bytesWritten,
             message: "Installed \(appId) to \(targetPath)"
         )
@@ -781,7 +776,9 @@ final class CommandExecutor: CommandExecuting {
             throw CommandError.networkError("GitHub API error: HTTP \((response as? HTTPURLResponse)?.statusCode ?? 0)")
         }
 
-        let content = String(data: data, encoding: .utf8) ?? "No content"
+        let content = formatGitHubContents(data: data, repoId: ghRepo, subPath: subPath)
+            ?? String(data: data, encoding: .utf8)
+            ?? "No content"
         return CommandResultData(
             content: content,
             message: "Browsed repo \(ghRepo)/\(subPath)"
@@ -845,7 +842,9 @@ final class CommandExecutor: CommandExecuting {
             throw CommandError.networkError("GitHub search failed: HTTP \((response as? HTTPURLResponse)?.statusCode ?? 0)")
         }
 
-        let content = String(data: data, encoding: .utf8) ?? "No results"
+        let content = formatGitHubSearchResults(data: data, query: query, scope: scope)
+            ?? String(data: data, encoding: .utf8)
+            ?? "No results"
         return CommandResultData(
             content: content,
             message: "GitHub search for \"\(query)\" (scope: \(scope))"
@@ -883,7 +882,9 @@ final class CommandExecutor: CommandExecuting {
             throw CommandError.networkError("Resource search failed: HTTP \((response as? HTTPURLResponse)?.statusCode ?? 0)")
         }
 
-        let content = String(data: data, encoding: .utf8) ?? "No results"
+        let content = formatGitHubSearchResults(data: data, query: query, scope: "code")
+            ?? String(data: data, encoding: .utf8)
+            ?? "No results"
         return CommandResultData(
             content: content,
             message: "Resource search for \"\(query)\"\(resourceType.map { " (type: \($0))" } ?? "")"
@@ -998,6 +999,268 @@ final class CommandExecutor: CommandExecuting {
             content: content,
             message: "Runbook '\(label)' completed (\(commands.count) commands)"
         )
+    }
+
+    // MARK: - Formatting Helpers
+
+    private func formatFapHubSearchResults(data: Data, query: String) -> String? {
+        guard let json = try? JSONSerialization.jsonObject(with: data) else {
+            return nil
+        }
+
+        let items = extractCatalogItems(from: json)
+        guard !items.isEmpty else { return nil }
+
+        let previewLimit = 12
+        let lines = items.prefix(previewLimit).enumerated().map { index, item in
+            let name = stringValue(item, keys: "name", "title", "app_name") ?? "Unknown"
+            let identifier = stringValue(item, keys: "id", "app_id") ?? name.lowercased().replacingOccurrences(of: " ", with: "_")
+            let category = stringValue(item, keys: "category", "type") ?? "misc"
+            let author = stringValue(item, keys: "author", "publisher") ?? "unknown"
+            let version = stringValue(item, keys: "version", "latest_version") ?? "unknown"
+            let description = stringValue(item, keys: "description", "summary") ?? ""
+            return [
+                "\(index + 1). \(name) (id=\(identifier), category=\(category), author=\(author), version=\(version))",
+                description.isEmpty ? nil : "   \(description)"
+            ].compactMap { $0 }.joined(separator: "\n")
+        }
+
+        var output = ["FapHub matches for \"\(query)\":", lines.joined(separator: "\n")]
+        if items.count > previewLimit {
+            output.append("... \(items.count - previewLimit) more result(s)")
+        }
+        return output.joined(separator: "\n")
+    }
+
+    private func formatGitHubContents(data: Data, repoId: String, subPath: String) -> String? {
+        guard let json = try? JSONSerialization.jsonObject(with: data) else {
+            return nil
+        }
+
+        let items: [[String: Any]]
+        if let array = json as? [[String: Any]] {
+            items = array
+        } else if let dict = json as? [String: Any] {
+            if let array = dict["items"] as? [[String: Any]] {
+                items = array
+            } else if let array = dict["entries"] as? [[String: Any]] {
+                items = array
+            } else if let array = dict["data"] as? [[String: Any]] {
+                items = array
+            } else {
+                return nil
+            }
+        } else {
+            return nil
+        }
+
+        guard !items.isEmpty else { return nil }
+
+        let previewLimit = 20
+        var lines = ["Repo contents for \(repoId)/\(subPath.isEmpty ? "." : subPath):"]
+        for (index, item) in items.prefix(previewLimit).enumerated() {
+            let name = stringValue(item, keys: "name", "path") ?? "unknown"
+            let type = stringValue(item, keys: "type") ?? (item["download_url"] is String ? "file" : "unknown")
+            let size = intValue(item, keys: "size")
+            let downloadUrl = stringValue(item, keys: "download_url", "html_url")
+            var line = "\(index + 1). [\(type)] \(name)"
+            if let size, size > 0 {
+                line += " (\(size) bytes)"
+            }
+            if let downloadUrl, !downloadUrl.isEmpty {
+                line += "\n   url: \(downloadUrl)"
+            }
+            lines.append(line)
+        }
+        if items.count > previewLimit {
+            lines.append("... \(items.count - previewLimit) more item(s)")
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    private func formatGitHubSearchResults(data: Data, query: String, scope: String) -> String? {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return nil
+        }
+
+        let items = json["items"] as? [[String: Any]] ?? []
+        guard !items.isEmpty else { return nil }
+
+        let totalCount = json["total_count"] as? Int
+        let previewLimit = 15
+        var lines = ["GitHub search results for \"\(query)\" (scope: \(scope)):"]
+        if let totalCount {
+            lines.append("Total matches: \(totalCount)")
+        }
+
+        for (index, item) in items.prefix(previewLimit).enumerated() {
+            let name = stringValue(item, keys: "name", "path", "html_url") ?? "unknown"
+            let path = stringValue(item, keys: "path", "html_url") ?? ""
+            let repository = (item["repository"] as? [String: Any]).flatMap { stringValue($0, keys: "full_name", "name") }
+            let downloadUrl = stringValue(item, keys: "download_url", "html_url")
+            var line = "\(index + 1). \(name)"
+            if let repository, !repository.isEmpty {
+                line += " [\(repository)]"
+            }
+            if !path.isEmpty, path != name {
+                line += "\n   path: \(path)"
+            }
+            if let downloadUrl, !downloadUrl.isEmpty {
+                line += "\n   url: \(downloadUrl)"
+            }
+            lines.append(line)
+        }
+
+        if items.count > previewLimit {
+            lines.append("... \(items.count - previewLimit) more result(s)")
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    private func extractCatalogItems(from json: Any) -> [[String: Any]] {
+        if let array = json as? [[String: Any]] {
+            return array
+        }
+        if let dict = json as? [String: Any] {
+            for key in ["apps", "items", "results", "data", "applications"] {
+                if let array = dict[key] as? [[String: Any]] {
+                    return array
+                }
+            }
+            if let nested = dict["catalog"] {
+                return extractCatalogItems(from: nested)
+            }
+        }
+        return []
+    }
+
+    private func stringValue(_ dictionary: [String: Any], keys: String...) -> String? {
+        for key in keys {
+            if let value = dictionary[key] as? String, !value.isEmpty {
+                return value
+            }
+        }
+        return nil
+    }
+
+    private func intValue(_ dictionary: [String: Any], keys: String...) -> Int? {
+        for key in keys {
+            if let value = dictionary[key] as? Int {
+                return value
+            }
+            if let value = dictionary[key] as? NSNumber {
+                return value.intValue
+            }
+            if let value = dictionary[key] as? String, let parsed = Int(value) {
+                return parsed
+            }
+        }
+        return nil
+    }
+
+    private func inferFapInstallDirectory(appId: String, sourceUrl: String) -> String {
+        let needle = "\(appId) \(sourceUrl)".lowercased()
+
+        if needle.contains("nfc") {
+            return "/ext/apps/nfc"
+        }
+        if needle.contains("subghz") || needle.contains("sub-ghz") {
+            return "/ext/apps/subghz"
+        }
+        if needle.contains("infrared") || needle.contains("ir_") || needle.contains("ir/") {
+            return "/ext/apps/infrared"
+        }
+        if needle.contains("bluetooth") || needle.contains("ble") {
+            return "/ext/apps/bluetooth"
+        }
+        if needle.contains("gpio") {
+            return "/ext/apps/gpio"
+        }
+        if needle.contains("usb") {
+            return "/ext/apps/usb"
+        }
+        if needle.contains("game") || needle.contains("doom") || needle.contains("tetris") || needle.contains("snake") {
+            return "/ext/apps/games"
+        }
+        if needle.contains("music") || needle.contains("rtttl") {
+            return "/ext/apps/media"
+        }
+
+        return "/ext/apps/misc"
+    }
+
+    private func sanitizeFileName(_ name: String) -> String {
+        var sanitized = name
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "\\", with: "_")
+            .replacingOccurrences(of: "..", with: "_")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if sanitized.isEmpty {
+            sanitized = "app"
+        }
+        if sanitized.count > 80 {
+            sanitized = String(sanitized.prefix(80))
+        }
+        return sanitized
+    }
+
+    private func looksLikeHTML(_ data: Data, contentType: String?) -> Bool {
+        if let contentType, contentType.lowercased().contains("html") {
+            return true
+        }
+        let sample = String(data: data.prefix(2048), encoding: .utf8)?.lowercased() ?? ""
+        return sample.contains("<html") || sample.contains("<!doctype html") || sample.contains("<head")
+    }
+
+    private func extractFapBinaryCandidate(from html: String, baseURL: URL, appIdHint: String) -> URL? {
+        let patterns = [
+            #"(?:href|src)=["']([^"']+\.fap(?:\?[^"']*)?)["']"#,
+            #"https?://[^"' ]+\.fap(?:\?[^"' ]*)?"#
+        ]
+
+        var candidates: [String] = []
+        for pattern in patterns {
+            if let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) {
+                let matches = regex.matches(in: html, range: NSRange(html.startIndex..., in: html))
+                for match in matches {
+                    let range = match.range(at: match.numberOfRanges > 1 ? 1 : 0)
+                    if let swiftRange = Range(range, in: html) {
+                        candidates.append(String(html[swiftRange]))
+                    }
+                }
+            }
+        }
+
+        let resolved = candidates.compactMap { raw -> URL? in
+            let trimmed = raw.trimmingCharacters(in: CharacterSet(charactersIn: "\"'<> "))
+            if trimmed.isEmpty { return nil }
+            if let absolute = URL(string: trimmed), absolute.scheme != nil {
+                return absolute
+            }
+            return URL(string: trimmed, relativeTo: baseURL)?.absoluteURL
+        }.filter { $0.scheme?.hasPrefix("http") == true }
+
+        return resolved.first { $0.absoluteString.lowercased().contains(appIdHint.lowercased()) } ?? resolved.first
+    }
+
+    private func downloadFapBinary(from url: URL, appIdHint: String, depth: Int = 0) async throws -> (data: Data, resolvedURL: URL) {
+        let (data, response) = try await URLSession.shared.data(from: url)
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw CommandError.networkError("Failed to download FAP: HTTP \((response as? HTTPURLResponse)?.statusCode ?? 0)")
+        }
+
+        let contentType = httpResponse.mimeType ?? httpResponse.value(forHTTPHeaderField: "Content-Type")
+        if looksLikeHTML(data, contentType: contentType), depth < 1,
+           let html = String(data: data, encoding: .utf8),
+           let candidate = extractFapBinaryCandidate(from: html, baseURL: url, appIdHint: appIdHint) {
+            return try await downloadFapBinary(from: candidate, appIdHint: appIdHint, depth: depth + 1)
+        }
+
+        if looksLikeHTML(data, contentType: contentType) {
+            throw CommandError.invalidArgument("Resolved FapHub URL returned HTML instead of a .fap file")
+        }
+
+        return (data, url)
     }
 
     // MARK: - Helpers

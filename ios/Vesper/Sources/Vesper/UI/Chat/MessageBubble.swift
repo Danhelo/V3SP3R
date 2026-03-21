@@ -2,11 +2,18 @@ import SwiftUI
 
 struct MessageBubble: View {
     let message: ChatMessage
+    let approval: PendingApproval?
     let onApprove: ((String) -> Void)?
     let onDeny: ((String) -> Void)?
 
-    init(message: ChatMessage, onApprove: ((String) -> Void)? = nil, onDeny: ((String) -> Void)? = nil) {
+    init(
+        message: ChatMessage,
+        approval: PendingApproval? = nil,
+        onApprove: ((String) -> Void)? = nil,
+        onDeny: ((String) -> Void)? = nil
+    ) {
         self.message = message
+        self.approval = approval
         self.onApprove = onApprove
         self.onDeny = onDeny
     }
@@ -41,6 +48,15 @@ struct MessageBubble: View {
                     Label("Error", systemImage: "exclamationmark.triangle.fill")
                         .font(.caption)
                         .foregroundStyle(.red)
+                }
+
+                if let approval, approval.id == message.metadata?.pendingApprovalId {
+                    ApprovalDialog(
+                        approval: approval,
+                        onApprove: { onApprove?(approval.id) },
+                        onDeny: { onDeny?(approval.id) }
+                    )
+                    .padding(.top, 8)
                 }
 
                 Text(message.timestamp, style: .time)

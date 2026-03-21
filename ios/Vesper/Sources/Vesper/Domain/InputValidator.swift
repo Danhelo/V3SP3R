@@ -94,14 +94,6 @@ enum InputValidator {
 
     /// Validate an ExecuteCommand for safety and required arguments.
     static func validate(_ command: ExecuteCommand) -> (isValid: Bool, error: String?) {
-        if let path = command.args.path, ProtectedPaths.isProtected(path) {
-            return (false, "Path '\(path)' is protected. Unlock in Settings to proceed.")
-        }
-
-        if let destPath = command.args.destinationPath, ProtectedPaths.isSystemPath(destPath) {
-            return (false, "Destination path '\(destPath)' is in protected system storage.")
-        }
-
         switch command.action {
         case .readFile, .delete, .listDirectory, .createDirectory:
             if command.args.path == nil || command.args.path?.isEmpty == true {

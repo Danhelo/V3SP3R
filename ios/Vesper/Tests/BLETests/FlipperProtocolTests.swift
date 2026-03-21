@@ -343,4 +343,100 @@ final class FlipperProtocolTests: XCTestCase {
         XCTAssertTrue(message.range(of: oldPathData) != nil, "Should contain old path")
         XCTAssertTrue(message.range(of: newPathData) != nil, "Should contain new path")
     }
+
+    // MARK: - Streaming Write Tests
+
+    func testSplitContentPreservesOrderAndLength() {
+        let payload = Data((0..<1025).map { UInt8($0 & 0xFF) })
+        let chunks = FlipperProtocol.splitContent(payload, chunkSize: 512)
+
+        XCTAssertEqual(chunks.count, 3)
+        XCTAssertEqual(chunks[0].count, 512)
+        XCTAssertEqual(chunks[1].count, 512)
+        XCTAssertEqual(chunks[2].count, 1)
+
+        var recombined = Data()
+        for chunk in chunks {
+            recombined.append(chunk)
+        }
+        XCTAssertEqual(recombined, payload)
+    }
+
+    func testStorageWriteRequestEncodesSharedRequestIdAndHasNext() {
+        let payload = Data((0..<600).map { UInt8($0 & 0xFF) })
+        let firstChunk = payload.prefix(512)
+        let finalChunk = payload.suffix(88)
+
+        let firstBody = FlipperProtocol.makeStorageWriteRequest(
+            path: "/ext/test.bin",
+            data: Data(firstChunk),
+            requestId: 42,
+            hasNext: true
+        )
+        let finalBody = FlipperProtocol.makeStorageWriteRequest(
+            path: "/ext/test.bin",
+            data: Data(finalChunk),
+            requestId: 42,
+            hasNext: false
+        )
+
+        let firstParsed = parseMainMessageHeader(firstBody)
+        let finalParsed = parseMainMessageHeader(finalBody)
+
+        XCTAssertEqual(firstParsed?.requestId, 42)
+        XCTAssertEqual(finalParsed?.requestId, 42)
+        XCTAssertEqual(firstParsed?.hasNext, true)
+        XCTAssertEqual(finalParsed?.hasNext, false)
+    }
+
+    private func parseMainMessageHeader(_ data: Data) -> (requestId: UInt32, hasNext: Bool)? {
+        var offset = 0
+        var requestId: UInt32?
+        var hasNext = false
+
+        while offset < data.count {
+            guard let tag = decodeVarint(data, from: offset) else { return nil }
+            offset = tag.nextOffset
+
+            let fieldNumber = UInt32(tag.value >> 3)
+            let wireType = UInt8(tag.value & 0x07)
+
+            switch wireType {
+            case 0:
+                guard let value = decodeVarint(data, from: offset) else { return nil }
+                offset = value.nextOffset
+                if fieldNumber == 1 {
+                    requestId = UInt32(value.value)
+                } else if fieldNumber == 3 {
+                    hasNext = value.value != 0
+                }
+            case 2:
+                guard let length = decodeVarint(data, from: offset) else { return nil }
+                offset = length.nextOffset + Int(length.value)
+            default:
+                return nil
+            }
+        }
+
+        guard let requestId else { return nil }
+        return (requestId: requestId, hasNext: hasNext)
+    }
+
+    private func decodeVarint(_ data: Data, from offset: Int) -> (value: UInt64, nextOffset: Int)? {
+        var value: UInt64 = 0
+        var shift: UInt64 = 0
+        var index = offset
+
+        while index < data.count && shift < 64 {
+            let byte = data[index]
+            value |= UInt64(byte & 0x7F) << shift
+            index += 1
+            if byte & 0x80 == 0 {
+                return (value, index)
+            }
+            shift += 7
+        }
+
+        return nil
+    }
 }

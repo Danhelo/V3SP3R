@@ -24,6 +24,24 @@ struct TokenUsage {
     let totalTokens: Int
 }
 
+struct ParsedCommand {
+    let command: ExecuteCommand?
+    let error: String?
+
+    init(command: ExecuteCommand? = nil, error: String? = nil) {
+        self.command = command
+        self.error = error
+    }
+}
+
+// MARK: - Protocol
+
+protocol OpenRouterClientProtocol: Sendable {
+    func chat(messages: [ChatMessage], sessionId: String) async -> ChatCompletionResult
+    func formatResult(_ result: CommandResult) -> String
+    func parseCommand(from arguments: String) -> (command: ExecuteCommand?, error: String?)
+}
+
 // MARK: - OpenRouter Client
 
 /// URLSession-based HTTP client for the OpenRouter chat completions API.
@@ -53,6 +71,29 @@ final class OpenRouterClient: @unchecked Sendable {
     private let maxContextMessages = 24
     private let maxToolCallsPerResponse = 1
     private let toolCallResponseMaxTokens = 1024
+    private let toolModelBlockQueue = DispatchQueue(label: "com.vesper.openrouter.tool-models")
+    private var unsupportedToolModels: [String: Date] = [:]
+
+    private static let toolModelFallbackCandidates = [
+        "nousresearch/hermes-4-405b",
+        "anthropic/claude-sonnet-4.6",
+        "anthropic/claude-sonnet-4.5",
+        "openai/o4-mini",
+        "x-ai/grok-4-fast",
+        "google/gemini-2.5-flash",
+        "openai/gpt-4o-mini"
+    ]
+
+    private static let visionModelCandidates = [
+        "google/gemini-2.0-flash-001",
+        "google/gemini-2.5-flash",
+        "openai/gpt-4o-mini"
+    ]
+    private static let visionSystemPrompt =
+        "You are a visual analysis assistant for a Flipper Zero companion app. " +
+        "Describe the image in detail. Focus on brand names, model numbers, device types, " +
+        "visible text or labels, and details that would help identify the correct IR, RF, NFC, " +
+        "or Bluetooth protocol. Be specific and concise."
 
     private static let apiURL = URL(string: "https://openrouter.ai/api/v1/chat/completions")!
     private static let httpReferer = "https://github.com/elder-plinius/V3SP3R"
@@ -97,10 +138,12 @@ final class OpenRouterClient: @unchecked Sendable {
             return .error("Invalid API key format. OpenRouter keys start with 'sk-or-'.")
         }
 
-        let model = settingsStore.selectedModel
-
         // Trim conversation to stay within context limits
         let compactMessages = trimConversation(messages)
+        let hasImages = compactMessages.contains { !($0.imageAttachments?.isEmpty ?? true) }
+        let processedMessages = hasImages
+            ? await preprocessImagesAsText(compactMessages, apiKey: apiKey)
+            : compactMessages
 
         // Build system prompt with optional glasses addendum
         let systemPrompt: String
@@ -114,7 +157,7 @@ final class OpenRouterClient: @unchecked Sendable {
         var requestMessages: [[String: Any]] = [
             ["role": "system", "content": systemPrompt]
         ]
-        requestMessages.append(contentsOf: buildRequestMessages(from: compactMessages))
+        requestMessages.append(contentsOf: buildRequestMessages(from: processedMessages))
 
         // Select tool definition based on glasses state
         let tools: [[String: Any]]
@@ -124,22 +167,53 @@ final class OpenRouterClient: @unchecked Sendable {
             tools = VesperPrompts.toolDefinitionWithoutGlasses()
         }
 
-        // Build request body
-        let requestBody: [String: Any] = [
-            "model": model,
-            "messages": requestMessages,
-            "tools": tools,
-            "tool_choice": "auto",
-            "max_tokens": toolCallResponseMaxTokens
-        ]
+        let candidateModels = buildToolModelCandidates(selectedModel: settingsStore.selectedModel)
+        var lastError: ChatCompletionResult?
 
-        // Build HTTP request
-        guard let httpRequest = buildHTTPRequest(apiKey: apiKey, body: requestBody) else {
-            return .error("Failed to build API request")
+        for candidateModel in candidateModels {
+            if isToolModelTemporarilyBlocked(candidateModel) {
+                continue
+            }
+
+            let requestBody: [String: Any] = [
+                "model": candidateModel,
+                "messages": requestMessages,
+                "tools": tools,
+                "tool_choice": "auto",
+                "max_tokens": toolCallResponseMaxTokens
+            ]
+
+            guard let httpRequest = buildHTTPRequest(apiKey: apiKey, body: requestBody) else {
+                return .error("Failed to build API request")
+            }
+
+            let result = await executeWithRetry(request: httpRequest)
+            switch result {
+            case .success:
+                markToolModelWorking(candidateModel)
+                return result
+
+            case .error(let message):
+                lastError = result
+
+                if isToolUseUnsupportedError(message) {
+                    markToolModelUnsupported(candidateModel)
+                    continue
+                }
+
+                if isModelAvailabilityError(message) {
+                    continue
+                }
+
+                if isToolPairingError(message) {
+                    return .error("Tool-call history is out of sync for this conversation. Start a new chat session and retry.")
+                }
+
+                return result
+            }
         }
 
-        // Execute with retry
-        return await executeWithRetry(request: httpRequest)
+        return lastError ?? .error("Unable to find a working model for tool execution.")
     }
 
     /// Format a CommandResult as JSON string for sending back to the AI as a tool result.
@@ -161,77 +235,478 @@ final class OpenRouterClient: @unchecked Sendable {
 
     /// Parse an ExecuteCommand from tool call arguments JSON.
     func parseCommand(from arguments: String) -> (command: ExecuteCommand?, error: String?) {
-        guard let data = arguments.data(using: .utf8) else {
-            return (nil, "Invalid UTF-8 in tool arguments")
+        let parsed = parseCommandDetailed(arguments)
+        return (parsed.command, parsed.error)
+    }
+
+    func parseCommandDetailed(_ arguments: String) -> ParsedCommand {
+        let trimmed = stripCodeFences(arguments.trimmingCharacters(in: .whitespacesAndNewlines))
+        guard !trimmed.isEmpty else {
+            return ParsedCommand(error: "Tool arguments were empty. Expected format: {\"action\":\"...\",\"args\":{...}}")
         }
 
-        // Try direct decoding first
-        let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
-        if let command = try? decoder.decode(ExecuteCommand.self, from: data) {
-            return (command, nil)
+        guard let data = trimmed.data(using: .utf8) else {
+            return ParsedCommand(error: "Invalid UTF-8 in tool arguments")
         }
 
-        // Fallback: manual JSON parsing for models that produce slightly non-standard output
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            return (nil, "Could not parse tool arguments as JSON. Expected: {\"action\":\"...\",\"args\":{...}}")
+        let strictDecoder = JSONDecoder()
+        strictDecoder.keyDecodingStrategy = .convertFromSnakeCase
+        if let command = try? strictDecoder.decode(ExecuteCommand.self, from: data) {
+            return ParsedCommand(command: command)
         }
 
-        // Extract action
-        guard let actionString = json["action"] as? String else {
-            return (nil, "Missing 'action' field in tool arguments")
+        guard let raw = try? JSONSerialization.jsonObject(with: data) else {
+            return ParsedCommand(error: "Could not parse tool arguments as JSON. Expected: {\"action\":\"...\",\"args\":{...}}")
         }
 
-        guard let action = CommandAction(rawValue: actionString) else {
-            return (nil, "Unknown action: '\(actionString)'. Check spelling and use snake_case.")
+        let rootObject: [String: Any]
+        if let array = raw as? [[String: Any]], let first = array.first {
+            rootObject = first
+        } else if let dict = raw as? [String: Any] {
+            rootObject = dict
+        } else {
+            return ParsedCommand(error: "Tool arguments must be a JSON object, got \(type(of: raw)).")
         }
 
-        // Extract args
-        let argsDict = json["args"] as? [String: Any] ?? [:]
+        guard let actionString = stringValue(rootObject, keys: "action") else {
+            return ParsedCommand(error: "Missing 'action' field in tool arguments")
+        }
 
-        // Build CommandArgs manually
+        guard let action = parseCommandAction(actionString) else {
+            return ParsedCommand(error: "Unknown action: '\(actionString)'. Check spelling and use snake_case.")
+        }
+
+        let argsObject = extractArgsObject(from: rootObject)
         let args = CommandArgs(
-            command: (argsDict["command"] as? String) ?? (argsDict["query"] as? String) ?? (argsDict["app_id"] as? String),
-            path: argsDict["path"] as? String,
-            destinationPath: argsDict["destination_path"] as? String,
-            content: argsDict["content"] as? String,
-            newName: argsDict["new_name"] as? String,
-            recursive: argsDict["recursive"] as? Bool ?? false,
-            artifactType: argsDict["artifact_type"] as? String,
-            artifactData: argsDict["artifact_data"] as? String,
-            prompt: argsDict["prompt"] as? String,
-            resourceType: argsDict["resource_type"] as? String,
-            runbookId: argsDict["runbook_id"] as? String,
-            payloadType: argsDict["payload_type"] as? String,
-            filter: argsDict["filter"] as? String,
-            appName: argsDict["app_name"] as? String,
-            appArgs: argsDict["app_args"] as? String,
-            frequency: (argsDict["frequency"] as? NSNumber)?.int64Value,
-            protocol: argsDict["protocol"] as? String,
-            address: argsDict["address"] as? String,
-            signalName: argsDict["signal_name"] as? String,
-            enabled: argsDict["enabled"] as? Bool,
-            red: argsDict["red"] as? Int,
-            green: argsDict["green"] as? Int,
-            blue: argsDict["blue"] as? Int,
-            repoId: argsDict["repo_id"] as? String,
-            subPath: argsDict["sub_path"] as? String,
-            downloadUrl: argsDict["download_url"] as? String,
-            searchScope: argsDict["search_scope"] as? String,
-            photoPrompt: argsDict["photo_prompt"] as? String
+            command: stringValue(argsObject, keys: "command", "query", "app_id", "appId", "app", "name"),
+            path: stringValue(argsObject, keys: "path", "file_path", "filepath"),
+            destinationPath: stringValue(argsObject, keys: "destination_path", "destinationPath", "dest", "destination"),
+            content: stringValue(argsObject, keys: "content", "text", "data"),
+            newName: stringValue(argsObject, keys: "new_name", "newName"),
+            recursive: boolValue(argsObject, keys: "recursive", "is_recursive") ?? false,
+            artifactType: stringValue(argsObject, keys: "artifact_type", "artifactType"),
+            artifactData: stringValue(argsObject, keys: "artifact_data", "artifactData", "data_base64"),
+            prompt: stringValue(argsObject, keys: "prompt", "description", "forge_prompt"),
+            resourceType: stringValue(argsObject, keys: "resource_type", "resourceType", "type"),
+            runbookId: stringValue(argsObject, keys: "runbook_id", "runbookId", "runbook"),
+            payloadType: stringValue(argsObject, keys: "payload_type", "payloadType"),
+            filter: stringValue(argsObject, keys: "filter", "vault_filter"),
+            appName: stringValue(argsObject, keys: "app_name", "appName"),
+            appArgs: stringValue(argsObject, keys: "app_args", "appArgs", "app_arguments"),
+            frequency: int64Value(argsObject, keys: "frequency", "freq"),
+            protocol: stringValue(argsObject, keys: "protocol"),
+            address: stringValue(argsObject, keys: "address"),
+            signalName: stringValue(argsObject, keys: "signal_name", "signalName", "signal"),
+            enabled: boolValue(argsObject, keys: "enabled", "on"),
+            red: intValue(argsObject, keys: "red", "r"),
+            green: intValue(argsObject, keys: "green", "g"),
+            blue: intValue(argsObject, keys: "blue", "b"),
+            repoId: stringValue(argsObject, keys: "repo_id", "repoId", "repo"),
+            subPath: stringValue(argsObject, keys: "sub_path", "subPath"),
+            downloadUrl: stringValue(argsObject, keys: "download_url", "downloadUrl", "url"),
+            searchScope: stringValue(argsObject, keys: "search_scope", "searchScope", "scope"),
+            photoPrompt: stringValue(argsObject, keys: "photo_prompt", "photoPrompt")
         )
 
-        let justification = json["justification"] as? String ?? ""
-        let expectedEffect = json["expected_effect"] as? String ?? ""
-
-        let command = ExecuteCommand(
-            action: action,
-            args: args,
-            justification: justification,
-            expectedEffect: expectedEffect
+        let justification = stringValue(rootObject, keys: "justification") ?? "Tool call requested by AI"
+        let expectedEffect = stringValue(rootObject, keys: "expected_effect") ?? "Execute requested operation safely."
+        return ParsedCommand(
+            command: ExecuteCommand(
+                action: action,
+                args: args,
+                justification: justification,
+                expectedEffect: expectedEffect
+            )
         )
+    }
 
-        return (command, nil)
+    // MARK: - Image Preprocessing
+
+    internal func preprocessImagesAsText(_ messages: [ChatMessage], apiKey: String) async -> [ChatMessage] {
+        guard !messages.isEmpty else { return messages }
+
+        return await withTaskGroup(of: (Int, ChatMessage).self) { group in
+            for (index, message) in messages.enumerated() {
+                group.addTask { [self] in
+                    (index, await self.preprocessImageMessage(message, apiKey: apiKey))
+                }
+            }
+
+            var processed = Array(repeating: messages[0], count: messages.count)
+            for await (index, message) in group {
+                processed[index] = message
+            }
+            return processed
+        }
+    }
+
+    private func describeImage(apiKey: String, attachment: ImageAttachment) async -> String? {
+        for model in Self.visionModelCandidates {
+            if let description = try? await requestVisionDescription(
+                apiKey: apiKey,
+                model: model,
+                attachment: attachment
+            ),
+            !description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                return description.trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+        }
+        return nil
+    }
+
+    private func requestVisionDescription(
+        apiKey: String,
+        model: String,
+        attachment: ImageAttachment
+    ) async throws -> String {
+        let imageData = attachment.data.base64EncodedString()
+        let requestBody: [String: Any] = [
+            "model": model,
+            "messages": [
+                [
+                    "role": "system",
+                    "content": Self.visionSystemPrompt
+                ],
+                [
+                    "role": "user",
+                    "content": [
+                        [
+                            "type": "text",
+                            "text": "Describe this image for a Flipper Zero assistant."
+                        ],
+                        [
+                            "type": "image_url",
+                            "image_url": [
+                                "url": "data:\(attachment.mimeType);base64,\(imageData)",
+                                "detail": "auto"
+                            ]
+                        ]
+                    ]
+                ]
+            ],
+            "max_tokens": 256
+        ]
+
+        guard let request = buildHTTPRequest(apiKey: apiKey, body: requestBody) else {
+            throw NSError(domain: "OpenRouterClient", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to build vision request"])
+        }
+
+        let (data, response) = try await session.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NSError(domain: "OpenRouterClient", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid vision response"])
+        }
+        guard (200...299).contains(httpResponse.statusCode) else {
+            let body = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw NSError(domain: "OpenRouterClient", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: "Vision API error \(httpResponse.statusCode): \(body.prefix(200))"])
+        }
+
+        switch parseResponse(data: data) {
+        case .success(let response):
+            return response.content ?? ""
+        case .error(let message):
+            throw NSError(domain: "OpenRouterClient", code: 0, userInfo: [NSLocalizedDescriptionKey: message])
+        }
+    }
+
+    // MARK: - Tool-Model Fallback
+
+    private func buildToolModelCandidates(selectedModel: String) -> [String] {
+        let candidates = [selectedModel] + Self.toolModelFallbackCandidates
+        var unique: [String] = []
+        for candidate in candidates {
+            let trimmed = candidate.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { continue }
+            guard !trimmed.lowercased().contains("gemini-2.5-flash-image-preview") else { continue }
+            guard !unique.contains(where: { $0.caseInsensitiveCompare(trimmed) == .orderedSame }) else { continue }
+            unique.append(trimmed)
+            if unique.count >= 10 { break }
+        }
+        return unique
+    }
+
+    private func isToolModelTemporarilyBlocked(_ model: String) -> Bool {
+        toolModelBlockQueue.sync {
+            guard let blockedAt = unsupportedToolModels[model] else { return false }
+            if Date().timeIntervalSince(blockedAt) > 5 * 60 {
+                unsupportedToolModels.removeValue(forKey: model)
+                return false
+            }
+            return true
+        }
+    }
+
+    private func markToolModelUnsupported(_ model: String) {
+        toolModelBlockQueue.sync {
+            unsupportedToolModels[model] = Date()
+        }
+    }
+
+    private func markToolModelWorking(_ model: String) {
+        toolModelBlockQueue.sync {
+            unsupportedToolModels.removeValue(forKey: model)
+        }
+    }
+
+    private func isToolUseUnsupportedError(_ message: String) -> Bool {
+        let normalized = message.lowercased()
+        return normalized.contains("tool use is not supported") ||
+            normalized.contains("tool use not supported") ||
+            normalized.contains("tool_calls") && normalized.contains("unsupported") ||
+            normalized.contains("tools not supported") ||
+            normalized.contains("does not support tools")
+    }
+
+    private func isModelAvailabilityError(_ message: String) -> Bool {
+        let normalized = message.lowercased()
+        return normalized.contains("model not found") ||
+            normalized.contains("provider not found") ||
+            normalized.contains("not available for your account") ||
+            normalized.contains("you are not allowed to use this model") ||
+            normalized.contains("access denied")
+    }
+
+    private func isToolPairingError(_ message: String) -> Bool {
+        let normalized = message.lowercased()
+        return normalized.contains("tool use block must have a corresponding tool use block in previous message") ||
+            normalized.contains("tool_result blocks") ||
+            normalized.contains("tool_use blocks") ||
+            normalized.contains("tool use ids were found without tool_result blocks")
+    }
+
+    private func stripCodeFences(_ text: String) -> String {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.hasPrefix("```") else { return trimmed }
+
+        let lines = trimmed.split(separator: "\n", omittingEmptySubsequences: false)
+        guard lines.count >= 2 else { return trimmed }
+
+        let bodyLines = lines.dropFirst().dropLast()
+        let body = bodyLines.joined(separator: "\n")
+        return body.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func normalizeActionName(_ action: String) -> String {
+        action
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: #"([a-z])([A-Z])"#, with: "$1_$2", options: .regularExpression)
+            .lowercased()
+            .replacingOccurrences(of: #"[^a-z0-9]+"#, with: "_", options: .regularExpression)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "_"))
+    }
+
+    private func parseCommandAction(_ action: String) -> CommandAction? {
+        let normalized = normalizeActionName(action)
+        switch normalized {
+        case "list_directory":
+            return .listDirectory
+        case "read_file":
+            return .readFile
+        case "write_file":
+            return .writeFile
+        case "create_directory":
+            return .createDirectory
+        case "delete":
+            return .delete
+        case "move":
+            return .move
+        case "rename":
+            return .rename
+        case "copy":
+            return .copy
+        case "get_device_info":
+            return .getDeviceInfo
+        case "get_storage_info":
+            return .getStorageInfo
+        case "execute_cli", "execute_command", "run_command", "cli_command", "command", "send_command":
+            return .executeCli
+        case "push_artifact":
+            return .pushArtifact
+        case "forge_payload", "forge", "craft_payload", "create_payload":
+            return .forgePayload
+        case "subghz_transmit":
+            return .subghzTransmit
+        case "ir_transmit":
+            return .irTransmit
+        case "nfc_emulate":
+            return .nfcEmulate
+        case "rfid_emulate":
+            return .rfidEmulate
+        case "ibutton_emulate":
+            return .ibuttonEmulate
+        case "badusb_execute":
+            return .badusbExecute
+        case "ble_spam":
+            return .bleSpam
+        case "launch_app", "open_app", "start_app", "loader_open":
+            return .launchApp
+        case "led_control":
+            return .ledControl
+        case "vibro_control":
+            return .vibroControl
+        case "search_faphub", "faphub_search", "find_faphub":
+            return .searchFaphub
+        case "install_faphub_app", "install_faphub", "faphub_install":
+            return .installFaphubApp
+        case "browse_repo", "browse_repository", "list_repo", "repo_browse", "repo_contents":
+            return .browseRepo
+        case "download_resource", "download_file", "fetch_resource", "get_resource":
+            return .downloadResource
+        case "github_search", "search_github", "gh_search", "find_on_github":
+            return .githubSearch
+        case "search_resources", "browse_resources", "find_resources":
+            return .searchResources
+        case "list_vault", "vault", "scan_vault", "inventory":
+            return .listVault
+        case "run_runbook", "runbook", "diagnostic":
+            return .runRunbook
+        case "request_photo":
+            return .requestPhoto
+        default:
+            return CommandAction(rawValue: normalized)
+        }
+    }
+
+    private func extractArgsObject(from rootObject: [String: Any]) -> [String: Any] {
+        if let dict = rootObject["args"] as? [String: Any] {
+            return dict
+        }
+        if let dict = rootObject["parameters"] as? [String: Any] {
+            return dict
+        }
+        if let string = rootObject["args"] as? String,
+           let data = string.data(using: .utf8),
+           let parsed = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            return parsed
+        }
+        if let array = rootObject["args"] as? [[String: Any]], let first = array.first {
+            return first
+        }
+        return rootObject
+    }
+
+    private func stringValue(_ dictionary: [String: Any], keys: String...) -> String? {
+        for key in keys {
+            if let value = dictionary[key] as? String, !value.isEmpty {
+                return value
+            }
+            if let value = dictionary[key] as? NSNumber {
+                return value.stringValue
+            }
+        }
+        return nil
+    }
+
+    private func boolValue(_ dictionary: [String: Any], keys: String...) -> Bool? {
+        for key in keys {
+            if let value = dictionary[key] as? Bool {
+                return value
+            }
+            if let value = dictionary[key] as? NSNumber {
+                return value.boolValue
+            }
+            if let value = dictionary[key] as? String {
+                switch value.lowercased() {
+                case "true", "1", "yes": return true
+                case "false", "0", "no": return false
+                default: break
+                }
+            }
+        }
+        return nil
+    }
+
+    private func intValue(_ dictionary: [String: Any], keys: String...) -> Int? {
+        for key in keys {
+            if let value = dictionary[key] as? Int {
+                return value
+            }
+            if let value = dictionary[key] as? NSNumber {
+                return value.intValue
+            }
+            if let value = dictionary[key] as? String, let parsed = Int(value) {
+                return parsed
+            }
+        }
+        return nil
+    }
+
+    private func int64Value(_ dictionary: [String: Any], keys: String...) -> Int64? {
+        for key in keys {
+            if let value = dictionary[key] as? Int64 {
+                return value
+            }
+            if let value = dictionary[key] as? Int {
+                return Int64(value)
+            }
+            if let value = dictionary[key] as? NSNumber {
+                return value.int64Value
+            }
+            if let value = dictionary[key] as? String, let parsed = Int64(value) {
+                return parsed
+            }
+        }
+        return nil
+    }
+
+    private func preprocessImageMessage(_ message: ChatMessage, apiKey: String) async -> ChatMessage {
+        guard let attachments = message.imageAttachments, !attachments.isEmpty else {
+            return message
+        }
+
+        let descriptions = await withTaskGroup(of: String?.self) { group in
+            for attachment in attachments {
+                group.addTask { [self] in
+                    await self.describeImage(apiKey: apiKey, attachment: attachment)
+                }
+            }
+
+            var results: [String] = []
+            for await description in group {
+                if let description, !description.isEmpty {
+                    results.append(description)
+                }
+            }
+            return results
+        }
+
+        if descriptions.isEmpty {
+            let failNote = "[\(attachments.count) image(s) were attached but could not be analyzed. Ask the user to try again or describe what they see.]"
+            let fallbackContent: String
+            if let content = message.content, !content.isEmpty {
+                fallbackContent = "\(failNote)\n\n\(content)"
+            } else {
+                fallbackContent = failNote
+            }
+            return ChatMessage(
+                id: message.id,
+                role: message.role,
+                content: fallbackContent,
+                timestamp: message.timestamp,
+                toolCalls: message.toolCalls,
+                toolResults: message.toolResults,
+                imageAttachments: nil,
+                isError: message.isError
+            )
+        }
+
+        let context = descriptions.map { "[Attached image: \($0)]" }.joined(separator: "\n")
+        let updatedContent: String
+        if let content = message.content, !content.isEmpty {
+            updatedContent = "\(context)\n\n\(content)"
+        } else {
+            updatedContent = context
+        }
+
+        return ChatMessage(
+            id: message.id,
+            role: message.role,
+            content: updatedContent,
+            timestamp: message.timestamp,
+            toolCalls: message.toolCalls,
+            toolResults: message.toolResults,
+            imageAttachments: nil,
+            isError: message.isError
+        )
     }
 
     // MARK: - Rate Limiting
@@ -519,3 +994,5 @@ final class OpenRouterClient: @unchecked Sendable {
         return .success(response)
     }
 }
+
+extension OpenRouterClient: OpenRouterClientProtocol {}

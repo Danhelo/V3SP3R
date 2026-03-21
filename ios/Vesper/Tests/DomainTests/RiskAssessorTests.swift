@@ -18,11 +18,18 @@ private struct MockSettingsStore: SettingsStoreProtocol, @unchecked Sendable {
     }
 
     func isPathInScope(_ path: String) -> Bool {
-        // If no scoped paths configured, treat /ext/ paths as in-scope
-        if scopedPaths.isEmpty {
-            return path.hasPrefix("/ext/")
+        scopedPaths.contains(where: { scope in
+            matchesScope(scope, path: path)
+        })
+    }
+
+    private func matchesScope(_ scope: String, path: String) -> Bool {
+        let normalizedScope = scope.hasSuffix("/") ? String(scope.dropLast()) : scope
+        guard !normalizedScope.isEmpty else { return false }
+        if path == normalizedScope {
+            return true
         }
-        return scopedPaths.contains(where: { path.hasPrefix($0) })
+        return path.hasPrefix(normalizedScope + "/")
     }
 }
 
@@ -156,6 +163,9 @@ final class RiskAssessorTests: XCTestCase {
     // MARK: - MEDIUM Risk Tests (default / in-scope)
 
     func testWriteFileIsMediumWhenInScope() {
+        settingsStore = MockSettingsStore(scopedPaths: ["/ext/test.txt"])
+        assessor = RiskAssessor(settingsStore: settingsStore)
+
         let cmd = makeCommand(action: .writeFile, path: "/ext/test.txt", content: "hello")
         let result = assessor.assess(cmd)
         XCTAssertEqual(result.level, .medium)
@@ -174,24 +184,30 @@ final class RiskAssessorTests: XCTestCase {
         XCTAssertTrue(result.requiresConfirmation)
     }
 
-    func testCreateDirectoryIsMediumWhenInScope() {
+    func testCreateDirectoryIsLowWhenInScope() {
+        settingsStore = MockSettingsStore(scopedPaths: ["/ext/newdir"])
+        assessor = RiskAssessor(settingsStore: settingsStore)
+
         let cmd = makeCommand(action: .createDirectory, path: "/ext/newdir")
         let result = assessor.assess(cmd)
-        XCTAssertEqual(result.level, .medium)
+        XCTAssertEqual(result.level, .low)
         XCTAssertFalse(result.requiresConfirmation)
     }
 
-    func testCreateDirectoryIsHighWhenOutOfScope() {
+    func testCreateDirectoryIsMediumWhenOutOfScope() {
         settingsStore = MockSettingsStore(scopedPaths: ["/ext/project/"])
         assessor = RiskAssessor(settingsStore: settingsStore)
 
         let cmd = makeCommand(action: .createDirectory, path: "/ext/other/newdir")
         let result = assessor.assess(cmd)
-        XCTAssertEqual(result.level, .high)
+        XCTAssertEqual(result.level, .medium)
         XCTAssertTrue(result.requiresConfirmation)
     }
 
     func testCopyIsMediumWhenDestInScope() {
+        settingsStore = MockSettingsStore(scopedPaths: ["/ext/b.txt"])
+        assessor = RiskAssessor(settingsStore: settingsStore)
+
         let cmd = makeCommand(action: .copy, path: "/ext/a.txt", destinationPath: "/ext/b.txt")
         let result = assessor.assess(cmd)
         XCTAssertEqual(result.level, .medium)
@@ -322,6 +338,28 @@ final class RiskAssessorTests: XCTestCase {
         let result = assessor.assess(cmd)
         // Should fall through to the action-based assessment (readFile -> LOW)
         XCTAssertEqual(result.level, .low)
+    }
+
+    func testSettingsStoreRequiresExplicitScopeGrantForCreateDirectory() {
+        let suiteName = "RiskAssessorTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        defer {
+            defaults.removePersistentDomain(forName: suiteName)
+        }
+
+        let realSettingsStore = SettingsStore(defaults: defaults)
+        XCTAssertFalse(realSettingsStore.isPathInScope("/ext/project/new_dir"))
+
+        realSettingsStore.grantPathScope("/ext/project")
+        XCTAssertTrue(realSettingsStore.isPathInScope("/ext/project/new_dir"))
+
+        let assessor = RiskAssessor(settingsStore: realSettingsStore)
+        let command = makeCommand(action: .createDirectory, path: "/ext/project/new_dir")
+        let result = assessor.assess(command)
+
+        XCTAssertEqual(result.level, .low)
+        XCTAssertFalse(result.requiresConfirmation)
     }
 
     // MARK: - CLI Command Risk Tests

@@ -19,6 +19,7 @@ final class SettingsStore: SettingsStoreProtocol, @unchecked Sendable {
         static let glassesEnabled = "vesper_glasses_enabled"
         static let glassesBridgeUrl = "vesper_glasses_bridge_url"
         static let protectedPathsUnlocked = "vesper_protected_paths_unlocked"
+        static let allowedPathScopes = "vesper_allowed_path_scopes"
     }
 
     // MARK: - Defaults
@@ -45,6 +46,12 @@ final class SettingsStore: SettingsStoreProtocol, @unchecked Sendable {
             _protectedPathsUnlocked = Set(saved)
         } else {
             _protectedPathsUnlocked = []
+        }
+
+        if let saved = defaults.stringArray(forKey: Keys.allowedPathScopes) {
+            _allowedPathScopes = Self.normalizeScopeSet(Set(saved))
+        } else {
+            _allowedPathScopes = []
         }
     }
 
@@ -98,6 +105,14 @@ final class SettingsStore: SettingsStoreProtocol, @unchecked Sendable {
         }
     }
 
+    var allowedPathScopes: Set<String> {
+        get { _allowedPathScopes }
+        set {
+            _allowedPathScopes = Self.normalizeScopeSet(newValue)
+            defaults.set(Array(_allowedPathScopes), forKey: Keys.allowedPathScopes)
+        }
+    }
+
     // MARK: - Backing Storage (tracked by @Observable)
 
     private var _selectedModel: String
@@ -106,6 +121,7 @@ final class SettingsStore: SettingsStoreProtocol, @unchecked Sendable {
     private var _glassesEnabled: Bool
     private var _glassesBridgeUrl: String
     private var _protectedPathsUnlocked: Set<String>
+    private var _allowedPathScopes: Set<String>
 
     // MARK: - Protected Path Helpers
 
@@ -129,8 +145,55 @@ final class SettingsStore: SettingsStoreProtocol, @unchecked Sendable {
     }
 
     /// Returns whether a path is within the user's permitted scope.
-    /// By default, all /ext/ paths are in scope.
+    /// By default, no scope is granted. Callers must explicitly grant a path
+    /// scope to mirror Android's permission service behavior.
     func isPathInScope(_ path: String) -> Bool {
-        path.hasPrefix("/ext/") || path == "/ext"
+        let candidatePath = normalizeScopePath(path)
+        return allowedPathScopes.contains(where: { scope in
+            matchesScope(scope, path: candidatePath)
+        })
+    }
+
+    /// Grants an explicit path scope for file and directory operations.
+    func grantPathScope(_ path: String) {
+        let normalized = normalizeScopePath(path)
+        guard !normalized.isEmpty else { return }
+
+        var scopes = allowedPathScopes
+        scopes.insert(normalized)
+        allowedPathScopes = scopes
+    }
+
+    /// Revokes an explicit path scope.
+    func revokePathScope(_ path: String) {
+        let normalized = normalizeScopePath(path)
+        guard !normalized.isEmpty else { return }
+
+        var scopes = allowedPathScopes
+        scopes.remove(normalized)
+        allowedPathScopes = scopes
+    }
+
+    private func normalizeScopePath(_ path: String) -> String {
+        let trimmed = path.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count > 1 else { return trimmed }
+        return trimmed.hasSuffix("/") ? String(trimmed.dropLast()) : trimmed
+    }
+
+    private static func normalizeScopeSet(_ scopes: Set<String>) -> Set<String> {
+        Set(scopes.map { scope in
+            let trimmed = scope.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard trimmed.count > 1 else { return trimmed }
+            return trimmed.hasSuffix("/") ? String(trimmed.dropLast()) : trimmed
+        }.filter { !$0.isEmpty })
+    }
+
+    private func matchesScope(_ scope: String, path: String) -> Bool {
+        let normalizedScope = normalizeScopePath(scope)
+        guard !normalizedScope.isEmpty else { return false }
+        if path == normalizedScope {
+            return true
+        }
+        return path.hasPrefix(normalizedScope + "/")
     }
 }

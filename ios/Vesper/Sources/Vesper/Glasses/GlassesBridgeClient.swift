@@ -93,6 +93,61 @@ final class GlassesBridgeClient {
         try await task.send(.string(jsonString))
     }
 
+    /// Sends a spoken AI response to the bridge, allowing paired glasses to play TTS or render HUD text.
+    func sendResponse(_ text: String, displayText: String? = nil) async throws {
+        let metadata: [String: String]?
+        if let displayText, !displayText.isEmpty {
+            metadata = ["display_text": displayText]
+        } else {
+            metadata = nil
+        }
+
+        try await send(
+            GlassesMessage(
+                type: "ai_response",
+                content: text,
+                imageData: nil,
+                metadata: metadata
+            )
+        )
+    }
+
+    /// Sends a status update to the bridge HUD.
+    func sendStatus(_ status: String) async throws {
+        try await send(
+            GlassesMessage(
+                type: "status",
+                content: status,
+                imageData: nil,
+                metadata: nil
+            )
+        )
+    }
+
+    /// Requests a photo capture from the bridge.
+    func sendCaptureRequest(prompt: String? = nil) async throws {
+        try await send(
+            GlassesMessage(
+                type: "capture_request",
+                content: prompt,
+                imageData: nil,
+                metadata: ["reason": "agent-request"]
+            )
+        )
+    }
+
+    /// Sends configuration values to the bridge.
+    func sendConfig(_ config: [String: String]) async throws {
+        try await send(
+            GlassesMessage(
+                type: "config",
+                content: nil,
+                imageData: nil,
+                metadata: config
+            )
+        )
+    }
+
     // MARK: - Private – Connection Lifecycle
 
     private func openConnection(to url: URL) {
