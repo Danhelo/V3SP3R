@@ -1,0 +1,33 @@
+{
+  "": {
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/VesperTests.build/master.swiftdeps"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Tests/AITests/VesperAgentTests.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/VesperTests.build/VesperAgentTests.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/VesperTests.build/VesperAgentTests.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/VesperTests.build/VesperAgentTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/VesperTests.build/VesperAgentTests.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/VesperTests.build/VesperAgentTests.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Tests/BLETests/FlipperProtocolTests.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/VesperTests.build/FlipperProtocolTests.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/VesperTests.build/FlipperProtocolTests.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/VesperTests.build/FlipperProtocolTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/VesperTests.build/FlipperProtocolTests.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/VesperTests.build/FlipperProtocolTests.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Tests/DomainTests/InputValidatorTests.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/VesperTests.build/InputValidatorTests.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/VesperTests.build/InputValidatorTests.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/VesperTests.build/InputValidatorTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/VesperTests.build/InputValidatorTests.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/VesperTests.build/InputValidatorTests.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Tests/DomainTests/RiskAssessorTests.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/VesperTests.build/RiskAssessorTests.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/VesperTests.build/RiskAssessorTests.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/VesperTests.build/RiskAssessorTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/VesperTests.build/RiskAssessorTests.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/VesperTests.build/RiskAssessorTests.dia"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-macosx/debug/VesperPackageTests.build/master.swiftdeps"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-macosx/debug/VesperPackageTests.derived/runner.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-macosx/debug/VesperPackageTests.build/runner.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-macosx/debug/VesperPackageTests.build/runner.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-macosx/debug/VesperPackageTests.build/runner~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-macosx/debug/VesperPackageTests.build/runner.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-macosx/debug/VesperPackageTests.build/runner.dia"
+  }
+}

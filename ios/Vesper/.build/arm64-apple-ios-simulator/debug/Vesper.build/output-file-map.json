@@ -1,0 +1,306 @@
+{
+  "": {
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/master.swiftdeps"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/AI/OpenRouterClient.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/OpenRouterClient.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/OpenRouterClient.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/OpenRouterClient~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/OpenRouterClient.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/OpenRouterClient.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/AI/PayloadEngine.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/PayloadEngine.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/PayloadEngine.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/PayloadEngine~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/PayloadEngine.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/PayloadEngine.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/AI/VesperAgent.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/VesperAgent.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/VesperAgent.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/VesperAgent~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/VesperAgent.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/VesperAgent.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/AI/VesperPrompts.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/VesperPrompts.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/VesperPrompts.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/VesperPrompts~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/VesperPrompts.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/VesperPrompts.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/App/VesperApp.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/VesperApp.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/VesperApp.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/VesperApp~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/VesperApp.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/VesperApp.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/BLE/FlipperBLEManager.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FlipperBLEManager.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FlipperBLEManager.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FlipperBLEManager~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FlipperBLEManager.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FlipperBLEManager.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/BLE/FlipperFileSystem.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FlipperFileSystem.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FlipperFileSystem.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FlipperFileSystem~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FlipperFileSystem.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FlipperFileSystem.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/BLE/FlipperProtocol.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FlipperProtocol.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FlipperProtocol.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FlipperProtocol~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FlipperProtocol.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FlipperProtocol.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/Data/AuditStore.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/AuditStore.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/AuditStore.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/AuditStore~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/AuditStore.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/AuditStore.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/Data/ChatStore.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ChatStore.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ChatStore.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ChatStore~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ChatStore.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ChatStore.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/Data/Models.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/Models.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/Models.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/Models~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/Models.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/Models.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/Data/SecureStorage.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/SecureStorage.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/SecureStorage.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/SecureStorage~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/SecureStorage.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/SecureStorage.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/Data/SettingsStore.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/SettingsStore.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/SettingsStore.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/SettingsStore~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/SettingsStore.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/SettingsStore.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/Domain/AuditService.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/AuditService.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/AuditService.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/AuditService~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/AuditService.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/AuditService.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/Domain/CommandExecutor.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/CommandExecutor.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/CommandExecutor.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/CommandExecutor~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/CommandExecutor.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/CommandExecutor.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/Domain/DiffService.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/DiffService.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/DiffService.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/DiffService~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/DiffService.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/DiffService.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/Domain/InputValidator.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/InputValidator.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/InputValidator.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/InputValidator~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/InputValidator.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/InputValidator.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/Domain/RiskAssessor.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/RiskAssessor.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/RiskAssessor.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/RiskAssessor~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/RiskAssessor.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/RiskAssessor.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/Glasses/GlassesBridgeClient.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/GlassesBridgeClient.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/GlassesBridgeClient.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/GlassesBridgeClient~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/GlassesBridgeClient.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/GlassesBridgeClient.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/UI/AlchemyLab/AlchemyLabView.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/AlchemyLabView.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/AlchemyLabView.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/AlchemyLabView~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/AlchemyLabView.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/AlchemyLabView.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/UI/AuditLog/AuditLogView.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/AuditLogView.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/AuditLogView.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/AuditLogView~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/AuditLogView.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/AuditLogView.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/UI/Chat/ChatView.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ChatView.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ChatView.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ChatView~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ChatView.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ChatView.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/UI/Chat/ChatViewModel.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ChatViewModel.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ChatViewModel.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ChatViewModel~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ChatViewModel.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ChatViewModel.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/UI/Chat/InputBar.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/InputBar.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/InputBar.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/InputBar~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/InputBar.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/InputBar.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/UI/Chat/MessageBubble.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/MessageBubble.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/MessageBubble.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/MessageBubble~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/MessageBubble.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/MessageBubble.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/UI/Components/ApprovalDialog.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ApprovalDialog.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ApprovalDialog.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ApprovalDialog~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ApprovalDialog.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ApprovalDialog.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/UI/Components/DiffViewer.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/DiffViewer.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/DiffViewer.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/DiffViewer~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/DiffViewer.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/DiffViewer.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/UI/Device/DeviceView.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/DeviceView.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/DeviceView.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/DeviceView~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/DeviceView.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/DeviceView.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/UI/Device/DeviceViewModel.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/DeviceViewModel.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/DeviceViewModel.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/DeviceViewModel~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/DeviceViewModel.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/DeviceViewModel.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/UI/Device/FileBrowserView.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FileBrowserView.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FileBrowserView.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FileBrowserView~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FileBrowserView.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FileBrowserView.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/UI/FapHub/FapHubView.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FapHubView.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FapHubView.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FapHubView~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FapHubView.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FapHubView.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/UI/FapHub/FapHubViewModel.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FapHubViewModel.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FapHubViewModel.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FapHubViewModel~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FapHubViewModel.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/FapHubViewModel.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/UI/OpsCenter/OpsCenterView.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/OpsCenterView.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/OpsCenterView.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/OpsCenterView~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/OpsCenterView.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/OpsCenterView.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/UI/OpsCenter/OpsCenterViewModel.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/OpsCenterViewModel.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/OpsCenterViewModel.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/OpsCenterViewModel~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/OpsCenterViewModel.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/OpsCenterViewModel.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/UI/PayloadLab/PayloadLabView.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/PayloadLabView.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/PayloadLabView.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/PayloadLabView~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/PayloadLabView.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/PayloadLabView.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/UI/PayloadLab/PayloadLabViewModel.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/PayloadLabViewModel.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/PayloadLabViewModel.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/PayloadLabViewModel~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/PayloadLabViewModel.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/PayloadLabViewModel.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/UI/ResourceBrowser/ResourceBrowserView.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ResourceBrowserView.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ResourceBrowserView.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ResourceBrowserView~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ResourceBrowserView.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ResourceBrowserView.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/UI/ResourceBrowser/ResourceBrowserViewModel.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ResourceBrowserViewModel.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ResourceBrowserViewModel.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ResourceBrowserViewModel~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ResourceBrowserViewModel.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/ResourceBrowserViewModel.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/UI/Settings/SettingsView.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/SettingsView.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/SettingsView.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/SettingsView~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/SettingsView.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/SettingsView.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/UI/Settings/SettingsViewModel.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/SettingsViewModel.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/SettingsViewModel.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/SettingsViewModel~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/SettingsViewModel.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/SettingsViewModel.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/Voice/SpeechRecognizer.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/SpeechRecognizer.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/SpeechRecognizer.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/SpeechRecognizer~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/SpeechRecognizer.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/SpeechRecognizer.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/Voice/TTSService.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/TTSService.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/TTSService.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/TTSService~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/TTSService.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/TTSService.dia"
+  },
+  "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/Sources/Vesper/Widget/VesperWidget.swift": {
+    "dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/VesperWidget.d",
+    "object": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/VesperWidget.swift.o",
+    "swiftmodule": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/VesperWidget~partial.swiftmodule",
+    "swift-dependencies": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/VesperWidget.swiftdeps",
+    "diagnostics": "/Users/danhelo/Desktop/proshects/v3sp3r_ios/V3SP3R/ios/Vesper/.build/arm64-apple-ios-simulator/debug/Vesper.build/VesperWidget.dia"
+  }
+}
