@@ -1,0 +1,806 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		043444A2429C3B033F14F0C1 /* DeviceViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12EB876A8C678D124256F3D /* DeviceViewModel.swift */; };
+		082B6F3525400E2C8F76CE21 /* AuditStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9CC14BDCEF6FFC3BCE54001 /* AuditStore.swift */; };
+		0DA273CFEB1D7E22AD2CA7BA /* ResourceBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F015CF203C2E15DDDFB8DD09 /* ResourceBrowserView.swift */; };
+		102DAAD4DDD6469BE02B17EA /* PayloadEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F805DE024ED9E4991924DB /* PayloadEngine.swift */; };
+		14DA008179B21F7426329CE1 /* VesperPrompts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 784AA332097613071A5DC380 /* VesperPrompts.swift */; };
+		2564DEA5CB79F0DF082978D5 /* InputValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9851388288DCCC7EA9AC7623 /* InputValidator.swift */; };
+		276DF0C3847DBCCB1F1AC602 /* DiffViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29418966301D153236D0D41E /* DiffViewer.swift */; };
+		2A93373F3BCE36AD757BBBBA /* DiffService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1EBFAE8D19940FFC5AC907B /* DiffService.swift */; };
+		2C01DA6DDFAEC8B9616105FA /* InputValidatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E879AF4E1B5B0EA8FC255EB4 /* InputValidatorTests.swift */; };
+		33230AAF4D5C1E0E766C9978 /* RiskAssessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3BAAF8942CF5AAB2B36D9C6 /* RiskAssessorTests.swift */; };
+		34B9CEE27B94C614934018B8 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D63DC9DAD8989B7D9A70DF89 /* SettingsViewModel.swift */; };
+		37C85DC236BCF99DCB4DD3B7 /* InputBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75766EF4374B1C14C411FA72 /* InputBar.swift */; };
+		3C256A47DD4FDD41E8F04233 /* FapHubView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23AE68EF2A694A00B37DB5EA /* FapHubView.swift */; };
+		3C4B486E8E7A5C984C42D403 /* OpenRouterClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A13B5B62A35E51D3A64B4227 /* OpenRouterClient.swift */; };
+		3D8410B21C3F9247007A3E0C /* VesperApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E35CA7E4907C8306BCE49C5D /* VesperApp.swift */; };
+		42B67AF6C6BE47C7CCD64D21 /* VesperAgent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F58650F58AE1EEAE2948F4CA /* VesperAgent.swift */; };
+		46120ACF5AF2C0E577CAFE88 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD5015535DAFAB466FC926DB /* ChatView.swift */; };
+		4F6A71CCDAB665B0ADEE47AA /* ApprovalDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB1CF5CF2FD6CC2152C71311 /* ApprovalDialog.swift */; };
+		5AEB7C6F143A0E1DE76E5792 /* ResourceBrowserViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0B75B64E65C49D2B6A0BC3D /* ResourceBrowserViewModel.swift */; };
+		65D741AFA417BA12F1A48E3C /* FlipperProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CAD2D1400EDE11611542750 /* FlipperProtocol.swift */; };
+		7164A64A410EF2DDAF7B51BF /* AuditService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB15673CA21C404602408A4E /* AuditService.swift */; };
+		7387239C666F8F6515E0E43E /* FlipperBLEManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEE2A083EDF57EAE48C3D513 /* FlipperBLEManager.swift */; };
+		787F9E7E3EC091326FE86DB9 /* GlassesBridgeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042215559A976260E12B24B6 /* GlassesBridgeClient.swift */; };
+		86AEB9FE6F988455209459EF /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E07D73FE32DA2BC423DB0B6 /* SettingsView.swift */; };
+		8B444D37D6179A131DF48CAD /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C76314DC3978EF7CA9B124FF /* SettingsStore.swift */; };
+		8FF05BA8D00F58A204F90ACD /* VesperAgentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A10552A837BCFF7F7AACF92 /* VesperAgentTests.swift */; };
+		94381D90DE74C48C08D798E1 /* AuditLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCFCABCFC4CA72D8372C9880 /* AuditLogView.swift */; };
+		9503C91B28F133DFA9CD62DC /* PayloadLabViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E05ACED09A60B27BE7A3875E /* PayloadLabViewModel.swift */; };
+		9FF87B8BE100B4DCED59BCEE /* FlipperProtocolTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DECB1E6F283C9C07C9CC931A /* FlipperProtocolTests.swift */; };
+		A0B99DEE4A0C853D6D619D21 /* DeviceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75E74D563359A55CCC1AF91B /* DeviceView.swift */; };
+		A56AF2998978D324F6FCD48A /* VesperWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4414307688FD1E4E9DEAC227 /* VesperWidget.swift */; };
+		A963577BDE4C6A74F76D7DAD /* AlchemyLabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EE1CB273BD8CB5E68C54C9D /* AlchemyLabView.swift */; };
+		B09490BEC83DD70ECB311C7B /* FileBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34BC301433F6A157E9E09DD6 /* FileBrowserView.swift */; };
+		B61A7E5B9AF91146EDFAA8A0 /* FapHubViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ACFCDE88F0A196CEDCD8C55 /* FapHubViewModel.swift */; };
+		B65488052F2B72A1E46193FA /* MessageBubble.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82F14C7D00D1D091AD07B4FD /* MessageBubble.swift */; };
+		B8959E4E39A9EC0054BBB5FF /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEACBA71018E99432D744322 /* Models.swift */; };
+		C980E74F3659F24279D2881F /* PayloadLabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E207589E192050FFD415813E /* PayloadLabView.swift */; };
+		CEF7F8452A9A00200849C2D9 /* CommandExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FB92310BACD0D125A7AAA88 /* CommandExecutor.swift */; };
+		E330EBFB3C8E245B26D985B6 /* OpsCenterViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC2066997A30942766756276 /* OpsCenterViewModel.swift */; };
+		E4962300A4F116D9D276D0D3 /* OpsCenterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CDFDCDE181C1B289CA196C6 /* OpsCenterView.swift */; };
+		E8624EDFF6D0C8D7F48893C0 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = DB4CBBC8B337E09226AD04A2 /* SwiftProtobuf */; };
+		EAADE84527793E5C1593CD74 /* FlipperFileSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5099A6C1FBED24F8EC2B6C06 /* FlipperFileSystem.swift */; };
+		EBC54FC350812702134100BB /* RiskAssessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 522B0E627EDF79EFC91232CB /* RiskAssessor.swift */; };
+		EFC6F62E68D89CBDF0C19458 /* SpeechRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FBDF37F2D94D675159275F4 /* SpeechRecognizer.swift */; };
+		F01784C65EEB6D0F854EE946 /* TTSService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2A72D45870CDE8861BCA0C3 /* TTSService.swift */; };
+		F0FF717912847F49FF916620 /* SecureStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 046DB5927DA1D6D1A26BFBE3 /* SecureStorage.swift */; };
+		FABC8426DEC83F7BFA73B601 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10FCC7DD8726FBF55A07B20 /* ChatViewModel.swift */; };
+		FB8E0F6A31B36E8AC86540EB /* ChatStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2015F1AC60D0089281065CB /* ChatStore.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		4EB6CDE2C05FEE96E4B44830 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6A6C4B3780126474C5330253 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 40E30AA22B946D44519CD2CD;
+			remoteInfo = Vesper;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		042215559A976260E12B24B6 /* GlassesBridgeClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassesBridgeClient.swift; sourceTree = "<group>"; };
+		046DB5927DA1D6D1A26BFBE3 /* SecureStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureStorage.swift; sourceTree = "<group>"; };
+		0EE1CB273BD8CB5E68C54C9D /* AlchemyLabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlchemyLabView.swift; sourceTree = "<group>"; };
+		0FB92310BACD0D125A7AAA88 /* CommandExecutor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandExecutor.swift; sourceTree = "<group>"; };
+		23AE68EF2A694A00B37DB5EA /* FapHubView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FapHubView.swift; sourceTree = "<group>"; };
+		28B53DFDCD1D35865C826C8C /* VesperTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = VesperTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		29418966301D153236D0D41E /* DiffViewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffViewer.swift; sourceTree = "<group>"; };
+		2E07D73FE32DA2BC423DB0B6 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		34BC301433F6A157E9E09DD6 /* FileBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserView.swift; sourceTree = "<group>"; };
+		3A10552A837BCFF7F7AACF92 /* VesperAgentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VesperAgentTests.swift; sourceTree = "<group>"; };
+		4414307688FD1E4E9DEAC227 /* VesperWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VesperWidget.swift; sourceTree = "<group>"; };
+		5099A6C1FBED24F8EC2B6C06 /* FlipperFileSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlipperFileSystem.swift; sourceTree = "<group>"; };
+		522B0E627EDF79EFC91232CB /* RiskAssessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiskAssessor.swift; sourceTree = "<group>"; };
+		75766EF4374B1C14C411FA72 /* InputBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputBar.swift; sourceTree = "<group>"; };
+		75E74D563359A55CCC1AF91B /* DeviceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceView.swift; sourceTree = "<group>"; };
+		784AA332097613071A5DC380 /* VesperPrompts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VesperPrompts.swift; sourceTree = "<group>"; };
+		7CDFDCDE181C1B289CA196C6 /* OpsCenterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpsCenterView.swift; sourceTree = "<group>"; };
+		7FBDF37F2D94D675159275F4 /* SpeechRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechRecognizer.swift; sourceTree = "<group>"; };
+		82F14C7D00D1D091AD07B4FD /* MessageBubble.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageBubble.swift; sourceTree = "<group>"; };
+		8CAD2D1400EDE11611542750 /* FlipperProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlipperProtocol.swift; sourceTree = "<group>"; };
+		9851388288DCCC7EA9AC7623 /* InputValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputValidator.swift; sourceTree = "<group>"; };
+		9ACFCDE88F0A196CEDCD8C55 /* FapHubViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FapHubViewModel.swift; sourceTree = "<group>"; };
+		A0B75B64E65C49D2B6A0BC3D /* ResourceBrowserViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceBrowserViewModel.swift; sourceTree = "<group>"; };
+		A13B5B62A35E51D3A64B4227 /* OpenRouterClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenRouterClient.swift; sourceTree = "<group>"; };
+		B12EB876A8C678D124256F3D /* DeviceViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceViewModel.swift; sourceTree = "<group>"; };
+		B1EBFAE8D19940FFC5AC907B /* DiffService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffService.swift; sourceTree = "<group>"; };
+		B5F805DE024ED9E4991924DB /* PayloadEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayloadEngine.swift; sourceTree = "<group>"; };
+		BCFCABCFC4CA72D8372C9880 /* AuditLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuditLogView.swift; sourceTree = "<group>"; };
+		C10FCC7DD8726FBF55A07B20 /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
+		C2015F1AC60D0089281065CB /* ChatStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatStore.swift; sourceTree = "<group>"; };
+		C76314DC3978EF7CA9B124FF /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
+		C9CC14BDCEF6FFC3BCE54001 /* AuditStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuditStore.swift; sourceTree = "<group>"; };
+		CD5015535DAFAB466FC926DB /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
+		D3BAAF8942CF5AAB2B36D9C6 /* RiskAssessorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiskAssessorTests.swift; sourceTree = "<group>"; };
+		D63DC9DAD8989B7D9A70DF89 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
+		DB1CF5CF2FD6CC2152C71311 /* ApprovalDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApprovalDialog.swift; sourceTree = "<group>"; };
+		DC2066997A30942766756276 /* OpsCenterViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpsCenterViewModel.swift; sourceTree = "<group>"; };
+		DEACBA71018E99432D744322 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		DECB1E6F283C9C07C9CC931A /* FlipperProtocolTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlipperProtocolTests.swift; sourceTree = "<group>"; };
+		E05ACED09A60B27BE7A3875E /* PayloadLabViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayloadLabViewModel.swift; sourceTree = "<group>"; };
+		E207589E192050FFD415813E /* PayloadLabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayloadLabView.swift; sourceTree = "<group>"; };
+		E35CA7E4907C8306BCE49C5D /* VesperApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VesperApp.swift; sourceTree = "<group>"; };
+		E879AF4E1B5B0EA8FC255EB4 /* InputValidatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputValidatorTests.swift; sourceTree = "<group>"; };
+		EB15673CA21C404602408A4E /* AuditService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuditService.swift; sourceTree = "<group>"; };
+		F015CF203C2E15DDDFB8DD09 /* ResourceBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceBrowserView.swift; sourceTree = "<group>"; };
+		F2A72D45870CDE8861BCA0C3 /* TTSService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTSService.swift; sourceTree = "<group>"; };
+		F58650F58AE1EEAE2948F4CA /* VesperAgent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VesperAgent.swift; sourceTree = "<group>"; };
+		FC005AA323F921941E1C9643 /* Vesper.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Vesper.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FEE2A083EDF57EAE48C3D513 /* FlipperBLEManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlipperBLEManager.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8B5F6277CFC2E7A5AAF56F05 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E8624EDFF6D0C8D7F48893C0 /* SwiftProtobuf in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		20255F7FB792B5540F65DEDC /* ResourceBrowser */ = {
+			isa = PBXGroup;
+			children = (
+				F015CF203C2E15DDDFB8DD09 /* ResourceBrowserView.swift */,
+				A0B75B64E65C49D2B6A0BC3D /* ResourceBrowserViewModel.swift */,
+			);
+			path = ResourceBrowser;
+			sourceTree = "<group>";
+		};
+		2241F588BF06035774A6C0CA /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				FC005AA323F921941E1C9643 /* Vesper.app */,
+				28B53DFDCD1D35865C826C8C /* VesperTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		279C04CFD87382A3B7F859D9 /* Voice */ = {
+			isa = PBXGroup;
+			children = (
+				7FBDF37F2D94D675159275F4 /* SpeechRecognizer.swift */,
+				F2A72D45870CDE8861BCA0C3 /* TTSService.swift */,
+			);
+			path = Voice;
+			sourceTree = "<group>";
+		};
+		30FB0C9B581F0A29753AC751 /* Device */ = {
+			isa = PBXGroup;
+			children = (
+				75E74D563359A55CCC1AF91B /* DeviceView.swift */,
+				B12EB876A8C678D124256F3D /* DeviceViewModel.swift */,
+				34BC301433F6A157E9E09DD6 /* FileBrowserView.swift */,
+			);
+			path = Device;
+			sourceTree = "<group>";
+		};
+		3C362D9E6C6D7CAE7356586A /* Glasses */ = {
+			isa = PBXGroup;
+			children = (
+				042215559A976260E12B24B6 /* GlassesBridgeClient.swift */,
+			);
+			path = Glasses;
+			sourceTree = "<group>";
+		};
+		41459156964999751EA3AAAE /* Widget */ = {
+			isa = PBXGroup;
+			children = (
+				4414307688FD1E4E9DEAC227 /* VesperWidget.swift */,
+			);
+			path = Widget;
+			sourceTree = "<group>";
+		};
+		58D709735A1306A192142840 = {
+			isa = PBXGroup;
+			children = (
+				B512EE5378BE8516589A8D29 /* Tests */,
+				AFB46DC0E3B376848BEA748A /* Vesper */,
+				2241F588BF06035774A6C0CA /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		66C863BDF1E15354C165DE1B /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				E710471EF78D35B08B5E9357 /* AlchemyLab */,
+				CE5CC1580AEDC26DB8749B34 /* AuditLog */,
+				CE31C4E73A2D99592E2B8C2D /* Chat */,
+				DB465DB684BB50A0E7A1FA63 /* Components */,
+				30FB0C9B581F0A29753AC751 /* Device */,
+				B1902982DFFD15AFD7A815E6 /* FapHub */,
+				8E624D1316116B665165460B /* OpsCenter */,
+				FE94E1902F2551B40BA95A0D /* PayloadLab */,
+				20255F7FB792B5540F65DEDC /* ResourceBrowser */,
+				CE377167B9B356D4955A6811 /* Settings */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		8C76B36AAD82B4E0000D3D4C /* BLE */ = {
+			isa = PBXGroup;
+			children = (
+				FEE2A083EDF57EAE48C3D513 /* FlipperBLEManager.swift */,
+				5099A6C1FBED24F8EC2B6C06 /* FlipperFileSystem.swift */,
+				8CAD2D1400EDE11611542750 /* FlipperProtocol.swift */,
+			);
+			path = BLE;
+			sourceTree = "<group>";
+		};
+		8D0F410DB73D61A0F156218C /* AITests */ = {
+			isa = PBXGroup;
+			children = (
+				3A10552A837BCFF7F7AACF92 /* VesperAgentTests.swift */,
+			);
+			path = AITests;
+			sourceTree = "<group>";
+		};
+		8D2F4B6FB82B22AE11C7967D /* App */ = {
+			isa = PBXGroup;
+			children = (
+				E35CA7E4907C8306BCE49C5D /* VesperApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		8E624D1316116B665165460B /* OpsCenter */ = {
+			isa = PBXGroup;
+			children = (
+				7CDFDCDE181C1B289CA196C6 /* OpsCenterView.swift */,
+				DC2066997A30942766756276 /* OpsCenterViewModel.swift */,
+			);
+			path = OpsCenter;
+			sourceTree = "<group>";
+		};
+		9C715F86B323D36E59BADFE8 /* BLETests */ = {
+			isa = PBXGroup;
+			children = (
+				DECB1E6F283C9C07C9CC931A /* FlipperProtocolTests.swift */,
+			);
+			path = BLETests;
+			sourceTree = "<group>";
+		};
+		AED977CC8DFA01E897A038FD /* AI */ = {
+			isa = PBXGroup;
+			children = (
+				A13B5B62A35E51D3A64B4227 /* OpenRouterClient.swift */,
+				B5F805DE024ED9E4991924DB /* PayloadEngine.swift */,
+				F58650F58AE1EEAE2948F4CA /* VesperAgent.swift */,
+				784AA332097613071A5DC380 /* VesperPrompts.swift */,
+			);
+			path = AI;
+			sourceTree = "<group>";
+		};
+		AFB46DC0E3B376848BEA748A /* Vesper */ = {
+			isa = PBXGroup;
+			children = (
+				AED977CC8DFA01E897A038FD /* AI */,
+				8D2F4B6FB82B22AE11C7967D /* App */,
+				8C76B36AAD82B4E0000D3D4C /* BLE */,
+				F1CAD7AC0E8CC5B3071EF842 /* Data */,
+				FAD1F839A0A8E261EDF55BE0 /* Domain */,
+				3C362D9E6C6D7CAE7356586A /* Glasses */,
+				66C863BDF1E15354C165DE1B /* UI */,
+				279C04CFD87382A3B7F859D9 /* Voice */,
+				41459156964999751EA3AAAE /* Widget */,
+			);
+			name = Vesper;
+			path = Sources/Vesper;
+			sourceTree = "<group>";
+		};
+		B1902982DFFD15AFD7A815E6 /* FapHub */ = {
+			isa = PBXGroup;
+			children = (
+				23AE68EF2A694A00B37DB5EA /* FapHubView.swift */,
+				9ACFCDE88F0A196CEDCD8C55 /* FapHubViewModel.swift */,
+			);
+			path = FapHub;
+			sourceTree = "<group>";
+		};
+		B512EE5378BE8516589A8D29 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				8D0F410DB73D61A0F156218C /* AITests */,
+				9C715F86B323D36E59BADFE8 /* BLETests */,
+				C2F6A8760BD6B796C3075EA4 /* DomainTests */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		C2F6A8760BD6B796C3075EA4 /* DomainTests */ = {
+			isa = PBXGroup;
+			children = (
+				E879AF4E1B5B0EA8FC255EB4 /* InputValidatorTests.swift */,
+				D3BAAF8942CF5AAB2B36D9C6 /* RiskAssessorTests.swift */,
+			);
+			path = DomainTests;
+			sourceTree = "<group>";
+		};
+		CE31C4E73A2D99592E2B8C2D /* Chat */ = {
+			isa = PBXGroup;
+			children = (
+				CD5015535DAFAB466FC926DB /* ChatView.swift */,
+				C10FCC7DD8726FBF55A07B20 /* ChatViewModel.swift */,
+				75766EF4374B1C14C411FA72 /* InputBar.swift */,
+				82F14C7D00D1D091AD07B4FD /* MessageBubble.swift */,
+			);
+			path = Chat;
+			sourceTree = "<group>";
+		};
+		CE377167B9B356D4955A6811 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				2E07D73FE32DA2BC423DB0B6 /* SettingsView.swift */,
+				D63DC9DAD8989B7D9A70DF89 /* SettingsViewModel.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		CE5CC1580AEDC26DB8749B34 /* AuditLog */ = {
+			isa = PBXGroup;
+			children = (
+				BCFCABCFC4CA72D8372C9880 /* AuditLogView.swift */,
+			);
+			path = AuditLog;
+			sourceTree = "<group>";
+		};
+		DB465DB684BB50A0E7A1FA63 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				DB1CF5CF2FD6CC2152C71311 /* ApprovalDialog.swift */,
+				29418966301D153236D0D41E /* DiffViewer.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		E710471EF78D35B08B5E9357 /* AlchemyLab */ = {
+			isa = PBXGroup;
+			children = (
+				0EE1CB273BD8CB5E68C54C9D /* AlchemyLabView.swift */,
+			);
+			path = AlchemyLab;
+			sourceTree = "<group>";
+		};
+		F1CAD7AC0E8CC5B3071EF842 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				C9CC14BDCEF6FFC3BCE54001 /* AuditStore.swift */,
+				C2015F1AC60D0089281065CB /* ChatStore.swift */,
+				DEACBA71018E99432D744322 /* Models.swift */,
+				046DB5927DA1D6D1A26BFBE3 /* SecureStorage.swift */,
+				C76314DC3978EF7CA9B124FF /* SettingsStore.swift */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
+		FAD1F839A0A8E261EDF55BE0 /* Domain */ = {
+			isa = PBXGroup;
+			children = (
+				EB15673CA21C404602408A4E /* AuditService.swift */,
+				0FB92310BACD0D125A7AAA88 /* CommandExecutor.swift */,
+				B1EBFAE8D19940FFC5AC907B /* DiffService.swift */,
+				9851388288DCCC7EA9AC7623 /* InputValidator.swift */,
+				522B0E627EDF79EFC91232CB /* RiskAssessor.swift */,
+			);
+			path = Domain;
+			sourceTree = "<group>";
+		};
+		FE94E1902F2551B40BA95A0D /* PayloadLab */ = {
+			isa = PBXGroup;
+			children = (
+				E207589E192050FFD415813E /* PayloadLabView.swift */,
+				E05ACED09A60B27BE7A3875E /* PayloadLabViewModel.swift */,
+			);
+			path = PayloadLab;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		40E30AA22B946D44519CD2CD /* Vesper */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4AFBA2FBCFB344EC9C07B64E /* Build configuration list for PBXNativeTarget "Vesper" */;
+			buildPhases = (
+				9DC036B7FD4F984A546EB9B0 /* Sources */,
+				8B5F6277CFC2E7A5AAF56F05 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Vesper;
+			packageProductDependencies = (
+				DB4CBBC8B337E09226AD04A2 /* SwiftProtobuf */,
+			);
+			productName = Vesper;
+			productReference = FC005AA323F921941E1C9643 /* Vesper.app */;
+			productType = "com.apple.product-type.application";
+		};
+		E1E04B034A5A620E5A7D6A6A /* VesperTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 14EEB81A16755EEF987DE844 /* Build configuration list for PBXNativeTarget "VesperTests" */;
+			buildPhases = (
+				2D906DD1891EE03AF5B56AC0 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				9812DF01FF36C406250BA3BF /* PBXTargetDependency */,
+			);
+			name = VesperTests;
+			packageProductDependencies = (
+			);
+			productName = VesperTests;
+			productReference = 28B53DFDCD1D35865C826C8C /* VesperTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		6A6C4B3780126474C5330253 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					40E30AA22B946D44519CD2CD = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = D5B2C37864C7772D8916231C /* Build configuration list for PBXProject "Vesper" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 58D709735A1306A192142840;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				7C41285AE32125A6B160700C /* XCRemoteSwiftPackageReference "swift-protobuf" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 2241F588BF06035774A6C0CA /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				40E30AA22B946D44519CD2CD /* Vesper */,
+				E1E04B034A5A620E5A7D6A6A /* VesperTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2D906DD1891EE03AF5B56AC0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9FF87B8BE100B4DCED59BCEE /* FlipperProtocolTests.swift in Sources */,
+				2C01DA6DDFAEC8B9616105FA /* InputValidatorTests.swift in Sources */,
+				33230AAF4D5C1E0E766C9978 /* RiskAssessorTests.swift in Sources */,
+				8FF05BA8D00F58A204F90ACD /* VesperAgentTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9DC036B7FD4F984A546EB9B0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A963577BDE4C6A74F76D7DAD /* AlchemyLabView.swift in Sources */,
+				4F6A71CCDAB665B0ADEE47AA /* ApprovalDialog.swift in Sources */,
+				94381D90DE74C48C08D798E1 /* AuditLogView.swift in Sources */,
+				7164A64A410EF2DDAF7B51BF /* AuditService.swift in Sources */,
+				082B6F3525400E2C8F76CE21 /* AuditStore.swift in Sources */,
+				FB8E0F6A31B36E8AC86540EB /* ChatStore.swift in Sources */,
+				46120ACF5AF2C0E577CAFE88 /* ChatView.swift in Sources */,
+				FABC8426DEC83F7BFA73B601 /* ChatViewModel.swift in Sources */,
+				CEF7F8452A9A00200849C2D9 /* CommandExecutor.swift in Sources */,
+				A0B99DEE4A0C853D6D619D21 /* DeviceView.swift in Sources */,
+				043444A2429C3B033F14F0C1 /* DeviceViewModel.swift in Sources */,
+				2A93373F3BCE36AD757BBBBA /* DiffService.swift in Sources */,
+				276DF0C3847DBCCB1F1AC602 /* DiffViewer.swift in Sources */,
+				3C256A47DD4FDD41E8F04233 /* FapHubView.swift in Sources */,
+				B61A7E5B9AF91146EDFAA8A0 /* FapHubViewModel.swift in Sources */,
+				B09490BEC83DD70ECB311C7B /* FileBrowserView.swift in Sources */,
+				7387239C666F8F6515E0E43E /* FlipperBLEManager.swift in Sources */,
+				EAADE84527793E5C1593CD74 /* FlipperFileSystem.swift in Sources */,
+				65D741AFA417BA12F1A48E3C /* FlipperProtocol.swift in Sources */,
+				787F9E7E3EC091326FE86DB9 /* GlassesBridgeClient.swift in Sources */,
+				37C85DC236BCF99DCB4DD3B7 /* InputBar.swift in Sources */,
+				2564DEA5CB79F0DF082978D5 /* InputValidator.swift in Sources */,
+				B65488052F2B72A1E46193FA /* MessageBubble.swift in Sources */,
+				B8959E4E39A9EC0054BBB5FF /* Models.swift in Sources */,
+				3C4B486E8E7A5C984C42D403 /* OpenRouterClient.swift in Sources */,
+				E4962300A4F116D9D276D0D3 /* OpsCenterView.swift in Sources */,
+				E330EBFB3C8E245B26D985B6 /* OpsCenterViewModel.swift in Sources */,
+				102DAAD4DDD6469BE02B17EA /* PayloadEngine.swift in Sources */,
+				C980E74F3659F24279D2881F /* PayloadLabView.swift in Sources */,
+				9503C91B28F133DFA9CD62DC /* PayloadLabViewModel.swift in Sources */,
+				0DA273CFEB1D7E22AD2CA7BA /* ResourceBrowserView.swift in Sources */,
+				5AEB7C6F143A0E1DE76E5792 /* ResourceBrowserViewModel.swift in Sources */,
+				EBC54FC350812702134100BB /* RiskAssessor.swift in Sources */,
+				F0FF717912847F49FF916620 /* SecureStorage.swift in Sources */,
+				8B444D37D6179A131DF48CAD /* SettingsStore.swift in Sources */,
+				86AEB9FE6F988455209459EF /* SettingsView.swift in Sources */,
+				34B9CEE27B94C614934018B8 /* SettingsViewModel.swift in Sources */,
+				EFC6F62E68D89CBDF0C19458 /* SpeechRecognizer.swift in Sources */,
+				F01784C65EEB6D0F854EE946 /* TTSService.swift in Sources */,
+				42B67AF6C6BE47C7CCD64D21 /* VesperAgent.swift in Sources */,
+				3D8410B21C3F9247007A3E0C /* VesperApp.swift in Sources */,
+				14DA008179B21F7426329CE1 /* VesperPrompts.swift in Sources */,
+				A56AF2998978D324F6FCD48A /* VesperWidget.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		9812DF01FF36C406250BA3BF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 40E30AA22B946D44519CD2CD /* Vesper */;
+			targetProxy = 4EB6CDE2C05FEE96E4B44830 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0AC6FB3ECE5B52D593386DF0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.danhelo.vesper.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Vesper.app/Vesper";
+			};
+			name = Release;
+		};
+		7DE7605EADBC771275D7AF6A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.danhelo.vesper;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		7F55EAF6D22F0CB5E149F473 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.danhelo.vesper;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		9BFF69BDE8B5C0DA7407ABA5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.danhelo.vesper.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Vesper.app/Vesper";
+			};
+			name = Debug;
+		};
+		9F536883CFB9DAB796A1540A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Vesper needs Bluetooth to connect to your Flipper Zero";
+				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "Vesper needs Bluetooth to communicate with your Flipper Zero";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Vesper uses the camera to capture images for AI analysis";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Vesper connects to the Mentra glasses bridge on your local network";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Vesper uses the microphone for voice commands";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Vesper uses speech recognition to process voice commands";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		DC6D5DDC67C4AD8E6EF6C5FF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Vesper needs Bluetooth to connect to your Flipper Zero";
+				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "Vesper needs Bluetooth to communicate with your Flipper Zero";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Vesper uses the camera to capture images for AI analysis";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Vesper connects to the Mentra glasses bridge on your local network";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Vesper uses the microphone for voice commands";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Vesper uses speech recognition to process voice commands";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		14EEB81A16755EEF987DE844 /* Build configuration list for PBXNativeTarget "VesperTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9BFF69BDE8B5C0DA7407ABA5 /* Debug */,
+				0AC6FB3ECE5B52D593386DF0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		4AFBA2FBCFB344EC9C07B64E /* Build configuration list for PBXNativeTarget "Vesper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7DE7605EADBC771275D7AF6A /* Debug */,
+				7F55EAF6D22F0CB5E149F473 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D5B2C37864C7772D8916231C /* Build configuration list for PBXProject "Vesper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DC6D5DDC67C4AD8E6EF6C5FF /* Debug */,
+				9F536883CFB9DAB796A1540A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		7C41285AE32125A6B160700C /* XCRemoteSwiftPackageReference "swift-protobuf" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-protobuf.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.25.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		DB4CBBC8B337E09226AD04A2 /* SwiftProtobuf */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7C41285AE32125A6B160700C /* XCRemoteSwiftPackageReference "swift-protobuf" */;
+			productName = SwiftProtobuf;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 6A6C4B3780126474C5330253 /* Project object */;
+}
