@@ -44,7 +44,23 @@ class OpsCenterViewModel {
                 justification: "User-initiated runbook",
                 expectedEffect: "Diagnostic information gathered"
             )
-            let result = await commandExecutor.execute(command, sessionId: UUID().uuidString)
+            let sessionId = UUID().uuidString
+            let result = await commandExecutor.execute(command, sessionId: sessionId)
+            if result.requiresConfirmation, let approvalId = result.pendingApprovalId {
+                pipelineHealth = .awaitingApproval(approvalId: approvalId, runbookId: runbookId)
+            } else if result.success {
+                pipelineHealth = .completed(result.data?.message ?? "Runbook completed")
+            } else {
+                pipelineHealth = .error(result.error ?? "Runbook failed")
+            }
+        }
+    }
+
+    func approveRunbook(_ approvalId: String) {
+        guard case .awaitingApproval(_, let runbookId) = pipelineHealth else { return }
+        pipelineHealth = .running(runbookId)
+        Task {
+            let result = await commandExecutor.approve(approvalId, sessionId: UUID().uuidString)
             if result.success {
                 pipelineHealth = .completed(result.data?.message ?? "Runbook completed")
             } else {
@@ -52,11 +68,19 @@ class OpsCenterViewModel {
             }
         }
     }
+
+    func denyRunbook(_ approvalId: String) {
+        Task {
+            _ = await commandExecutor.reject(approvalId, sessionId: UUID().uuidString)
+            pipelineHealth = .idle
+        }
+    }
 }
 
 enum PipelineHealth: Equatable {
     case idle
     case running(String)
+    case awaitingApproval(approvalId: String, runbookId: String)
     case completed(String)
     case error(String)
 }

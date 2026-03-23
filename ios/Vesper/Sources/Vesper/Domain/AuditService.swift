@@ -112,15 +112,35 @@ final class AuditService: @unchecked Sendable, AuditServiceProtocol {
 
 // MARK: - In-Memory Audit Store
 
-/// A simple in-memory audit store for use during development or testing.
+/// Audit store that keeps entries in memory and persists to UserDefaults
+/// so audit logs survive app restarts.
 final class InMemoryAuditStore: AuditStoreProtocol {
 
     private let lock = NSLock()
     private var entries: [AuditEntry] = []
+    private let defaults: UserDefaults
+    private static let storageKey = "vesper_audit_entries"
+    private static let maxPersistedEntries = 500
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        // Load persisted entries on init
+        if let data = defaults.data(forKey: Self.storageKey) {
+            let decoder = JSONDecoder()
+            if let saved = try? decoder.decode([AuditEntry].self, from: data) {
+                entries = saved
+            }
+        }
+    }
 
     func save(_ entry: AuditEntry) {
         lock.lock()
         entries.append(entry)
+        // Cap entries to avoid unbounded growth
+        if entries.count > Self.maxPersistedEntries {
+            entries.removeFirst(entries.count - Self.maxPersistedEntries)
+        }
+        persistLocked()
         lock.unlock()
     }
 
@@ -142,6 +162,15 @@ final class InMemoryAuditStore: AuditStoreProtocol {
     func clearAll() {
         lock.lock()
         entries.removeAll()
+        persistLocked()
         lock.unlock()
+    }
+
+    /// Persists entries to UserDefaults. Must be called while lock is held.
+    private func persistLocked() {
+        let encoder = JSONEncoder()
+        if let data = try? encoder.encode(entries) {
+            defaults.set(data, forKey: Self.storageKey)
+        }
     }
 }

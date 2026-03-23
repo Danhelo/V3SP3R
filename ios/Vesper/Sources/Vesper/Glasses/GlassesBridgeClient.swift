@@ -40,6 +40,7 @@ final class GlassesBridgeClient {
     // MARK: - Private
 
     private var webSocketTask: URLSessionWebSocketTask?
+    private var keepaliveTask: Task<Void, Never>?
     private let session: URLSession = {
         let config = URLSessionConfiguration.default
         config.waitsForConnectivity = true
@@ -115,12 +116,16 @@ final class GlassesBridgeClient {
             } else {
                 self.state = .connected
                 self.reconnectAttempts = 0
+                self.startKeepalive()
                 self.receiveMessages()
             }
         }
     }
 
     private func closeConnection(reason: String?) {
+        keepaliveTask?.cancel()
+        keepaliveTask = nil
+
         webSocketTask?.cancel(with: .normalClosure,
                               reason: reason?.data(using: .utf8))
         webSocketTask = nil
@@ -209,6 +214,37 @@ final class GlassesBridgeClient {
             try? await Task.sleep(nanoseconds: self?.reconnectDelayNs ?? 3_000_000_000)
             guard let self, !self.intentionalDisconnect else { return }
             self.openConnection(to: url)
+        }
+    }
+
+    // MARK: - Keepalive
+
+    private static let keepaliveIntervalNs: UInt64 = 30_000_000_000 // 30 seconds
+
+    private func startKeepalive() {
+        keepaliveTask?.cancel()
+        keepaliveTask = Task { [weak self] in
+            while !Task.isCancelled {
+                do {
+                    try await Task.sleep(nanoseconds: Self.keepaliveIntervalNs)
+                } catch {
+                    break // Task was cancelled
+                }
+
+                guard let self, !Task.isCancelled else { break }
+
+                guard let task = self.webSocketTask else { break }
+
+                await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                    task.sendPing { [weak self] error in
+                        if let error {
+                            self?.debugLog("Keepalive ping failed: \(error.localizedDescription)")
+                            self?.handleConnectionFailure(error)
+                        }
+                        continuation.resume()
+                    }
+                }
+            }
         }
     }
 

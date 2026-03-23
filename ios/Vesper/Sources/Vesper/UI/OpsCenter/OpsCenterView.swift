@@ -42,6 +42,34 @@ struct OpsCenterView: View {
                     Text("Running: \(runbook)")
                         .foregroundStyle(.orange)
                 }
+            case .awaitingApproval(let approvalId, let runbookId):
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Image(systemName: "exclamationmark.shield")
+                            .foregroundStyle(.orange)
+                        Text("Approval required: \(runbookId)")
+                            .font(.subheadline)
+                    }
+                    HStack(spacing: 12) {
+                        Button {
+                            viewModel.approveRunbook(approvalId)
+                        } label: {
+                            Label("Approve", systemImage: "checkmark.circle")
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.green)
+                        .controlSize(.small)
+
+                        Button {
+                            viewModel.denyRunbook(approvalId)
+                        } label: {
+                            Label("Deny", systemImage: "xmark.circle")
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(.red)
+                        .controlSize(.small)
+                    }
+                }
             case .completed(let message):
                 HStack {
                     Image(systemName: "checkmark.circle.fill")

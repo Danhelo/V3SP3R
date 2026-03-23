@@ -23,12 +23,11 @@ class FlipperBLEManager: NSObject {
     private var connectedPeripheral: CBPeripheral?
     private var serialTxCharacteristic: CBCharacteristic?
     private var serialRxCharacteristic: CBCharacteristic?
-    private var negotiatedMTU: Int = 20
+    private var negotiatedMTU: Int = 23
 
     private var pendingOperations: [String: CheckedContinuation<Data, Error>] = [:]
     private var pendingWriteAcks: [String: CheckedContinuation<Void, Error>] = [:]
     private var dataBuffer = Data()
-    private var expectedFrameLength: Int? = nil
 
     private var reconnectTask: Task<Void, Never>?
     private var keepaliveTask: Task<Void, Never>?
@@ -37,41 +36,66 @@ class FlipperBLEManager: NSObject {
     private var reconnectAttemptCount: Int = 0
     private var isReconnecting: Bool = false
     private var notificationsReady: Bool = false
+    private var waitingForNotifications: Bool = false
+    private var intentionalDisconnect: Bool = false
+    private var lastBleActivityTime: Date = Date()
+
+    /// Dedicated BLE queue — keeps CBCentralManager callbacks off the main thread.
+    private let bleQueue = DispatchQueue(label: "com.vesper.flipper.ble", qos: .userInitiated)
+
+    /// Serial write queue — ensures only one write operation at a time.
+    private let writeQueue = DispatchQueue(label: "com.vesper.flipper.write", qos: .userInitiated)
+    private var isWriting = false
 
     /// Callback invoked when raw data arrives from the Flipper's serial RX characteristic.
     var onDataReceived: ((Data) -> Void)?
 
+    /// Settings store for device persistence and auto-connect.
+    var settingsStore: SettingsStore?
+
     // MARK: - GATT UUIDs
 
-    static let flipperServiceUUID = CBUUID(string: "00003082-0000-1000-8000-00805f9b34fb")
-    static let flipperServiceBlackUUID = CBUUID(string: "00003081-0000-1000-8000-00805f9b34fb")
-    static let flipperServiceTransparentUUID = CBUUID(string: "00003083-0000-1000-8000-00805f9b34fb")
+    // Advertisement service UUIDs (match official Flipper iOS app)
+    static let flipperServiceF6UUID = CBUUID(string: "3080")
+    static let flipperServiceBlackUUID = CBUUID(string: "3081")
+    static let flipperServiceWhiteUUID = CBUUID(string: "3082")
+    static let flipperServiceClearUUID = CBUUID(string: "3083")
+
+    // Serial service & characteristics
     static let serialServiceUUID = CBUUID(string: "8fe5b3d5-2e7f-4a98-2a48-7acc60fe0000")
     static let serialTxUUID = CBUUID(string: "19ed82ae-ed21-4c9d-4145-228e62fe0000")
     static let serialRxUUID = CBUUID(string: "19ed82ae-ed21-4c9d-4145-228e61fe0000")
 
     static let scanServiceUUIDs: [CBUUID] = [
-        flipperServiceUUID,
+        flipperServiceF6UUID,
         flipperServiceBlackUUID,
-        flipperServiceTransparentUUID,
-        serialServiceUUID
+        flipperServiceWhiteUUID,
+        flipperServiceClearUUID,
     ]
 
-    // MARK: - Constants
+    // MARK: - Constants (matched to Android FlipperBleService.kt)
 
-    private static let defaultATTMTU: Int = 20
-    private static let maxReconnectAttempts: Int = 5
-    private static let reconnectBaseDelaySeconds: TimeInterval = 2.0
+    private static let defaultATTMTU: Int = 23               // Android DEFAULT_ATT_MTU
+    private static let requestedATTMTU: Int = 517             // Android REQUESTED_ATT_MTU
+    private static let attWriteOverhead: Int = 3              // Android ATT_WRITE_OVERHEAD_BYTES
+    private static let minBLEChunkBytes: Int = 20             // Android MIN_BLE_CHUNK_BYTES
+    private static let maxReconnectAttempts: Int = 3          // Android MAX_TIMEOUT_RECONNECT_ATTEMPTS
+    private static let reconnectBaseDelayMs: Double = 1000    // Android TIMEOUT_RECONNECT_DELAY_MS
+    private static let reconnectBackoffStepMs: Double = 500   // Android TIMEOUT_RECONNECT_BACKOFF_STEP_MS
     private static let scanTimeoutSeconds: TimeInterval = 30.0
-    private static let keepaliveIntervalSeconds: TimeInterval = 15.0
-    private static let writeInterChunkDelay: UInt64 = 15_000_000 // 15ms in nanoseconds
+    private static let keepaliveIntervalSeconds: TimeInterval = 3.0  // Android BLE_KEEPALIVE_INTERVAL_MS
+    private static let keepaliveIdleThresholdSeconds: TimeInterval = 3.5  // Android BLE_KEEPALIVE_IDLE_THRESHOLD_MS
+    private static let writeInterChunkDelay: UInt64 = 8_000_000      // 8ms (Android WRITE_NO_RESPONSE_CHUNK_DELAY_MS)
     private static let commandTimeoutSeconds: TimeInterval = 5.0
+    private static let writeAckTimeoutSeconds: TimeInterval = 3.0    // Android WRITE_ACK_TIMEOUT_MS
+    private static let maxWriteStartAttempts: Int = 5                 // Android MAX_WRITE_START_ATTEMPTS
+    private static let writeStartRetryDelayMs: UInt64 = 80_000_000   // 80ms
 
     // MARK: - Init
 
     override init() {
         super.init()
-        centralManager = CBCentralManager(delegate: self, queue: .main)
+        centralManager = CBCentralManager(delegate: self, queue: bleQueue)
     }
 
     // MARK: - Public API
@@ -80,20 +104,30 @@ class FlipperBLEManager: NSObject {
         guard centralManager.state == .poweredOn else {
             logger.warning("Cannot scan: Bluetooth not powered on (state: \(self.centralManager.state.rawValue))")
             if centralManager.state == .unauthorized {
-                connectionState = .error("Bluetooth permission denied")
+                DispatchQueue.main.async { self.connectionState = .error("Bluetooth permission denied") }
             } else if centralManager.state == .poweredOff {
-                connectionState = .error("Bluetooth is turned off")
+                DispatchQueue.main.async { self.connectionState = .error("Bluetooth is turned off") }
             }
             return
         }
 
-        discoveredDevices.removeAll()
-        connectionState = .scanning
+        DispatchQueue.main.async {
+            self.discoveredDevices.removeAll()
+            self.connectionState = .scanning
+        }
 
-        centralManager.scanForPeripherals(
-            withServices: Self.scanServiceUUIDs,
-            options: [CBCentralManagerScanOptionAllowDuplicatesKey: false]
-        )
+        // Check for Flippers already connected by another app (e.g. official Flipper app)
+        let alreadyConnected = centralManager.retrieveConnectedPeripherals(withServices: [Self.serialServiceUUID] + Self.scanServiceUUIDs)
+        for peripheral in alreadyConnected {
+            let deviceId = peripheral.identifier.uuidString
+            let deviceName = peripheral.name ?? "Flipper (\(deviceId.prefix(8)))"
+            let device = FlipperDevice(id: deviceId, name: deviceName, rssi: 0, isConnected: false)
+            DispatchQueue.main.async { self.discoveredDevices.append(device) }
+            logger.info("Found already-connected Flipper: \(deviceName) [\(deviceId)]")
+        }
+
+        // Scan for advertising Flippers (matching official Flipper iOS app)
+        centralManager.scanForPeripherals(withServices: Self.scanServiceUUIDs)
 
         logger.info("Started BLE scan for Flipper devices")
 
@@ -118,24 +152,33 @@ class FlipperBLEManager: NSObject {
         guard centralManager.isScanning else { return }
         centralManager.stopScan()
 
-        if connectionState == .scanning {
-            connectionState = .disconnected
+        DispatchQueue.main.async {
+            if self.connectionState == .scanning {
+                self.connectionState = .disconnected
+            }
         }
         logger.info("Stopped BLE scan")
     }
 
     func connect(device: FlipperDevice) {
-        stopScanning()
-        reconnectAttemptCount = 0
-        isReconnecting = false
-        lastConnectedDeviceId = device.id
-
-        guard let peripheral = findPeripheral(for: device) else {
-            connectionState = .error("Device not found: \(device.name)")
+        // Guard duplicate connects
+        guard connectionState != .connecting, connectionState != .connected else {
+            logger.info("Already connecting/connected, ignoring duplicate connect")
             return
         }
 
-        connectionState = .connecting
+        stopScanning()
+        reconnectAttemptCount = 0
+        isReconnecting = false
+        intentionalDisconnect = false
+        lastConnectedDeviceId = device.id
+
+        guard let peripheral = findPeripheral(for: device) else {
+            DispatchQueue.main.async { self.connectionState = .error("Device not found: \(device.name)") }
+            return
+        }
+
+        DispatchQueue.main.async { self.connectionState = .connecting }
         connectedPeripheral = peripheral
         peripheral.delegate = self
 
@@ -147,6 +190,7 @@ class FlipperBLEManager: NSObject {
     }
 
     func disconnect() {
+        intentionalDisconnect = true
         reconnectTask?.cancel()
         reconnectTask = nil
         keepaliveTask?.cancel()
@@ -160,8 +204,21 @@ class FlipperBLEManager: NSObject {
         }
 
         cleanupConnection()
-        connectionState = .disconnected
+        DispatchQueue.main.async { self.connectionState = .disconnected }
         logger.info("Disconnected from Flipper")
+    }
+
+    /// Attempts to reconnect to the last known device if auto-connect is enabled.
+    func autoReconnect() {
+        guard let settings = settingsStore,
+              settings.autoConnect,
+              let address = settings.lastDeviceAddress else {
+            return
+        }
+
+        let name = settings.lastDeviceName ?? "Flipper"
+        let device = FlipperDevice(id: address, name: name)
+        connect(device: device)
     }
 
     func sendData(_ data: Data) async throws {
@@ -174,15 +231,17 @@ class FlipperBLEManager: NSObject {
             throw FlipperBLEError.notConnected
         }
 
+        lastBleActivityTime = Date()
+
         // Split data into MTU-sized chunks
-        let chunkSize = max(negotiatedMTU - 3, 20) // 3 bytes for ATT header
+        let chunkSize = max(negotiatedMTU - Self.attWriteOverhead, Self.minBLEChunkBytes)
         var offset = 0
 
         while offset < data.count {
             let end = min(offset + chunkSize, data.count)
             let chunk = data[offset..<end]
 
-            try await writeChunk(Data(chunk), to: peripheral, characteristic: txCharacteristic)
+            try await writeChunkWithRetry(Data(chunk), to: peripheral, characteristic: txCharacteristic)
 
             offset = end
 
@@ -223,7 +282,7 @@ class FlipperBLEManager: NSObject {
     // MARK: - Private Helpers
 
     private func findPeripheral(for device: FlipperDevice) -> CBPeripheral? {
-        let connected = centralManager.retrieveConnectedPeripherals(withServices: Self.scanServiceUUIDs)
+        let connected = centralManager.retrieveConnectedPeripherals(withServices: [Self.serialServiceUUID] + Self.scanServiceUUIDs)
         if let match = connected.first(where: { $0.identifier.uuidString == device.id }) {
             return match
         }
@@ -233,26 +292,39 @@ class FlipperBLEManager: NSObject {
         return nil
     }
 
-    private func writeChunk(_ chunk: Data, to peripheral: CBPeripheral, characteristic: CBCharacteristic) async throws {
+    /// Write a single chunk with retry logic matching Android (MAX_WRITE_START_ATTEMPTS attempts, 80ms between retries).
+    private func writeChunkWithRetry(_ chunk: Data, to peripheral: CBPeripheral, characteristic: CBCharacteristic) async throws {
         let writeType: CBCharacteristicWriteType =
             characteristic.properties.contains(.writeWithoutResponse) ? .withoutResponse : .withResponse
 
-        if writeType == .withResponse {
-            let writeId = "write_\(UUID().uuidString)"
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                pendingWriteAcks[writeId] = continuation
-                peripheral.writeValue(chunk, for: characteristic, type: writeType)
+        for attempt in 1...Self.maxWriteStartAttempts {
+            do {
+                if writeType == .withResponse {
+                    let writeId = "write_\(UUID().uuidString)"
+                    try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                        pendingWriteAcks[writeId] = continuation
+                        peripheral.writeValue(chunk, for: characteristic, type: writeType)
 
-                // Timeout for the write acknowledgment
-                Task { [weak self] in
-                    try? await Task.sleep(nanoseconds: 2_000_000_000)
-                    if let cont = self?.pendingWriteAcks.removeValue(forKey: writeId) {
-                        cont.resume(throwing: FlipperBLEError.writeTimeout)
+                        // Timeout for the write acknowledgment
+                        Task { [weak self] in
+                            try? await Task.sleep(nanoseconds: UInt64(Self.writeAckTimeoutSeconds * 1_000_000_000))
+                            if let cont = self?.pendingWriteAcks.removeValue(forKey: writeId) {
+                                cont.resume(throwing: FlipperBLEError.writeTimeout)
+                            }
+                        }
                     }
+                } else {
+                    peripheral.writeValue(chunk, for: characteristic, type: writeType)
+                }
+                return // Success
+            } catch {
+                if attempt < Self.maxWriteStartAttempts {
+                    logger.warning("Write attempt \(attempt)/\(Self.maxWriteStartAttempts) failed, retrying in 80ms")
+                    try await Task.sleep(nanoseconds: Self.writeStartRetryDelayMs)
+                } else {
+                    throw error
                 }
             }
-        } else {
-            peripheral.writeValue(chunk, for: characteristic, type: writeType)
         }
     }
 
@@ -260,11 +332,12 @@ class FlipperBLEManager: NSObject {
         serialTxCharacteristic = nil
         serialRxCharacteristic = nil
         connectedPeripheral = nil
-        connectedDevice = nil
         notificationsReady = false
+        waitingForNotifications = false
         negotiatedMTU = Self.defaultATTMTU
         dataBuffer.removeAll()
-        expectedFrameLength = nil
+
+        DispatchQueue.main.async { self.connectedDevice = nil }
 
         // Fail all pending operations
         let pending = pendingOperations
@@ -283,7 +356,9 @@ class FlipperBLEManager: NSObject {
     private func attemptReconnect() {
         guard !isReconnecting else { return }
         guard reconnectAttemptCount < Self.maxReconnectAttempts else {
-            connectionState = .error("Reconnection failed after \(Self.maxReconnectAttempts) attempts")
+            DispatchQueue.main.async {
+                self.connectionState = .error("Reconnection failed after \(Self.maxReconnectAttempts) attempts")
+            }
             lastConnectedDeviceId = nil
             return
         }
@@ -292,33 +367,33 @@ class FlipperBLEManager: NSObject {
         isReconnecting = true
         reconnectAttemptCount += 1
         let attempt = reconnectAttemptCount
-        let delay = Self.reconnectBaseDelaySeconds * pow(2.0, Double(attempt - 1))
+        // Linear backoff: 1s, 1.5s, 2s (matching Android)
+        let delayMs = Self.reconnectBaseDelayMs + Double(attempt - 1) * Self.reconnectBackoffStepMs
+        let delaySeconds = delayMs / 1000.0
 
-        logger.info("Scheduling reconnect attempt \(attempt)/\(Self.maxReconnectAttempts) in \(delay)s")
-        connectionState = .connecting
+        logger.info("Scheduling reconnect attempt \(attempt)/\(Self.maxReconnectAttempts) in \(delaySeconds)s")
+        DispatchQueue.main.async { self.connectionState = .connecting }
 
         reconnectTask?.cancel()
         reconnectTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+            try? await Task.sleep(nanoseconds: UInt64(delayMs * 1_000_000))
             guard !Task.isCancelled else { return }
 
-            await MainActor.run {
-                guard let self, self.isReconnecting else { return }
-                self.isReconnecting = false
+            guard let self else { return }
+            self.isReconnecting = false
 
-                guard let uuid = UUID(uuidString: deviceId),
-                      let peripheral = self.centralManager.retrievePeripherals(withIdentifiers: [uuid]).first else {
-                    logger.warning("Cannot find peripheral for reconnect: \(deviceId)")
-                    self.attemptReconnect()
-                    return
-                }
-
-                self.connectedPeripheral = peripheral
-                peripheral.delegate = self
-                self.centralManager.connect(peripheral, options: [
-                    CBConnectPeripheralOptionNotifyOnDisconnectionKey: true
-                ])
+            guard let uuid = UUID(uuidString: deviceId),
+                  let peripheral = self.centralManager.retrievePeripherals(withIdentifiers: [uuid]).first else {
+                logger.warning("Cannot find peripheral for reconnect: \(deviceId)")
+                self.attemptReconnect()
+                return
             }
+
+            self.connectedPeripheral = peripheral
+            peripheral.delegate = self
+            self.centralManager.connect(peripheral, options: [
+                CBConnectPeripheralOptionNotifyOnDisconnectionKey: true
+            ])
         }
     }
 
@@ -327,24 +402,23 @@ class FlipperBLEManager: NSObject {
         keepaliveTask = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: UInt64(Self.keepaliveIntervalSeconds * 1_000_000_000))
-                guard !Task.isCancelled else { break }
+                guard !Task.isCancelled, let self else { break }
+                guard let peripheral = self.connectedPeripheral,
+                      peripheral.state == .connected else { continue }
 
-                guard let self,
-                      let peripheral = self.connectedPeripheral,
-                      peripheral.state == .connected,
-                      let rx = self.serialRxCharacteristic else {
-                    continue
+                let idleTime = Date().timeIntervalSince(self.lastBleActivityTime)
+                if idleTime >= Self.keepaliveIdleThresholdSeconds {
+                    peripheral.readRSSI()
+                    logger.debug("Keepalive ping sent (idle \(String(format: "%.1f", idleTime))s)")
                 }
-
-                // Read RSSI as a non-intrusive keepalive probe
-                peripheral.readRSSI()
-                logger.debug("Keepalive ping sent")
             }
         }
     }
 
     /// Process incoming data: buffer it and attempt frame reassembly.
     private func processIncomingData(_ data: Data) {
+        lastBleActivityTime = Date()
+
         // Forward raw data to the protocol handler
         onDataReceived?(data)
 
@@ -353,39 +427,67 @@ class FlipperBLEManager: NSObject {
         attemptFrameReassembly()
     }
 
+    /// Frame reassembly using varint length prefix (matching Flipper RPC protobuf framing).
     private func attemptFrameReassembly() {
-        while dataBuffer.count >= 4 {
-            if expectedFrameLength == nil {
-                let length = dataBuffer.withUnsafeBytes { ptr in
-                    ptr.loadUnaligned(as: UInt32.self)
-                }
-                let frameLen = Int(UInt32(littleEndian: length))
+        while !dataBuffer.isEmpty {
+            var offset = 0
+            var length: UInt64 = 0
+            var shift: UInt64 = 0
+            var varintComplete = false
 
-                guard frameLen > 0, frameLen <= 256 * 1024 else {
-                    // Invalid frame length -- likely not a framed response
-                    dataBuffer.removeAll()
-                    return
-                }
-                expectedFrameLength = frameLen
+            while offset < dataBuffer.count {
+                let byte = dataBuffer[offset]
+                length |= UInt64(byte & 0x7F) << shift
+                offset += 1
+                if byte & 0x80 == 0 { varintComplete = true; break }
+                shift += 7
+                if shift > 35 { dataBuffer.removeAll(); return }
             }
 
-            guard let expected = expectedFrameLength else { return }
+            guard varintComplete else { return }
 
-            // Check if we have the full frame (4 byte header + payload)
-            guard dataBuffer.count >= 4 + expected else {
-                return // Wait for more data
-            }
+            let frameLen = Int(length)
+            guard frameLen > 0, frameLen <= 256 * 1024 else { dataBuffer.removeAll(); return }
+            guard dataBuffer.count >= offset + frameLen else { return }
 
-            let frameData = dataBuffer[4..<(4 + expected)]
-            dataBuffer.removeSubrange(0..<(4 + expected))
-            expectedFrameLength = nil
+            let frameData = dataBuffer[offset..<(offset + frameLen)]
+            dataBuffer.removeSubrange(0..<(offset + frameLen))
 
-            // Complete the oldest pending operation
             if let (id, continuation) = pendingOperations.first {
                 pendingOperations.removeValue(forKey: id)
                 continuation.resume(returning: Data(frameData))
             }
         }
+    }
+
+    // MARK: - Connection Finalization
+
+    private func finalizeConnection(peripheral: CBPeripheral) {
+        // Query MTU now that characteristics are discovered and notifications enabled
+        let mtu = peripheral.maximumWriteValueLength(for: .withoutResponse)
+        negotiatedMTU = max(mtu, Self.defaultATTMTU)
+        logger.info("Negotiated MTU: \(self.negotiatedMTU)")
+
+        let deviceName = peripheral.name ?? "Flipper Zero"
+        let deviceId = peripheral.identifier.uuidString
+
+        DispatchQueue.main.async {
+            self.connectedDevice = FlipperDevice(
+                id: deviceId,
+                name: deviceName,
+                rssi: 0,
+                isConnected: true
+            )
+            self.connectionState = .connected
+        }
+
+        // Persist last connected device for auto-reconnect
+        settingsStore?.lastDeviceAddress = deviceId
+        settingsStore?.lastDeviceName = deviceName
+
+        lastBleActivityTime = Date()
+        startKeepalive()
+        logger.info("Flipper connection fully established: \(deviceName)")
     }
 }
 
@@ -398,21 +500,23 @@ extension FlipperBLEManager: CBCentralManagerDelegate {
 
         switch central.state {
         case .poweredOn:
-            if connectionState == .error("Bluetooth is turned off") ||
-               connectionState == .error("Bluetooth permission denied") {
-                connectionState = .disconnected
+            DispatchQueue.main.async {
+                if self.connectionState == .error("Bluetooth is turned off") ||
+                   self.connectionState == .error("Bluetooth permission denied") {
+                    self.connectionState = .disconnected
+                }
             }
         case .poweredOff:
             cleanupConnection()
-            connectionState = .error("Bluetooth is turned off")
+            DispatchQueue.main.async { self.connectionState = .error("Bluetooth is turned off") }
         case .unauthorized:
             cleanupConnection()
-            connectionState = .error("Bluetooth permission denied")
+            DispatchQueue.main.async { self.connectionState = .error("Bluetooth permission denied") }
         case .unsupported:
-            connectionState = .error("Bluetooth LE not supported")
+            DispatchQueue.main.async { self.connectionState = .error("Bluetooth LE not supported") }
         case .resetting:
             cleanupConnection()
-            connectionState = .disconnected
+            DispatchQueue.main.async { self.connectionState = .disconnected }
         case .unknown:
             break
         @unknown default:
@@ -438,11 +542,13 @@ extension FlipperBLEManager: CBCentralManagerDelegate {
             isConnected: false
         )
 
-        if let existingIndex = discoveredDevices.firstIndex(where: { $0.id == deviceId }) {
-            discoveredDevices[existingIndex] = device
-        } else {
-            discoveredDevices.append(device)
-            logger.info("Discovered Flipper: \(deviceName) [\(deviceId)] RSSI=\(RSSI.intValue)")
+        DispatchQueue.main.async {
+            if let existingIndex = self.discoveredDevices.firstIndex(where: { $0.id == deviceId }) {
+                self.discoveredDevices[existingIndex] = device
+            } else {
+                self.discoveredDevices.append(device)
+                logger.info("Discovered Flipper: \(deviceName) [\(deviceId)] RSSI=\(RSSI.intValue)")
+            }
         }
     }
 
@@ -451,12 +557,11 @@ extension FlipperBLEManager: CBCentralManagerDelegate {
 
         reconnectAttemptCount = 0
         isReconnecting = false
+        intentionalDisconnect = false
         reconnectTask?.cancel()
 
-        // Request MTU negotiation -- CoreBluetooth handles this via maximumWriteValueLength
-        let mtu = peripheral.maximumWriteValueLength(for: .withoutResponse)
-        negotiatedMTU = max(mtu, Self.defaultATTMTU)
-        logger.info("Negotiated MTU: \(self.negotiatedMTU)")
+        // Do NOT query MTU here — it returns 20 before service discovery.
+        // MTU is queried later in finalizeConnection() after characteristics are ready.
 
         // Discover services
         peripheral.discoverServices([Self.serialServiceUUID] + Self.scanServiceUUIDs)
@@ -466,10 +571,10 @@ extension FlipperBLEManager: CBCentralManagerDelegate {
         let msg = error?.localizedDescription ?? "Unknown error"
         logger.error("Failed to connect: \(msg)")
 
-        if lastConnectedDeviceId != nil {
+        if lastConnectedDeviceId != nil, !intentionalDisconnect {
             attemptReconnect()
         } else {
-            connectionState = .error("Connection failed: \(msg)")
+            DispatchQueue.main.async { self.connectionState = .error("Connection failed: \(msg)") }
             cleanupConnection()
         }
     }
@@ -481,10 +586,11 @@ extension FlipperBLEManager: CBCentralManagerDelegate {
         cleanupConnection()
         keepaliveTask?.cancel()
 
-        if wasConnected, lastConnectedDeviceId != nil {
+        // Don't auto-reconnect if user disconnected intentionally
+        if wasConnected, lastConnectedDeviceId != nil, !intentionalDisconnect {
             attemptReconnect()
         } else {
-            connectionState = .disconnected
+            DispatchQueue.main.async { self.connectionState = .disconnected }
         }
     }
 }
@@ -496,13 +602,13 @@ extension FlipperBLEManager: CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         if let error {
             logger.error("Service discovery failed: \(error.localizedDescription)")
-            connectionState = .error("Service discovery failed")
+            DispatchQueue.main.async { self.connectionState = .error("Service discovery failed") }
             return
         }
 
         guard let services = peripheral.services else {
             logger.warning("No services found on peripheral")
-            connectionState = .error("No compatible services found")
+            DispatchQueue.main.async { self.connectionState = .error("No compatible services found") }
             return
         }
 
@@ -538,16 +644,29 @@ extension FlipperBLEManager: CBPeripheralDelegate {
                 serialRxCharacteristic = characteristic
                 logger.info("Found Serial RX characteristic")
 
-                // Subscribe to notifications
+                // Subscribe to notifications — wait for the callback before finalizing
+                waitingForNotifications = true
                 peripheral.setNotifyValue(true, for: characteristic)
+
+                // Timeout in case didUpdateNotificationState never fires
+                Task { [weak self] in
+                    try? await Task.sleep(nanoseconds: 1_000_000_000) // 1s timeout
+                    guard let self, self.waitingForNotifications else { return }
+                    self.waitingForNotifications = false
+                    logger.warning("Notification readiness timeout — finalizing anyway")
+                    if self.serialTxCharacteristic != nil && self.serialRxCharacteristic != nil {
+                        self.finalizeConnection(peripheral: peripheral)
+                    }
+                }
 
             default:
                 break
             }
         }
 
-        // Check if we have both characteristics
-        if serialTxCharacteristic != nil && serialRxCharacteristic != nil {
+        // If TX is ready and we're NOT waiting for RX notifications, finalize now
+        // (This handles the case where RX was discovered in a previous callback)
+        if serialTxCharacteristic != nil && serialRxCharacteristic != nil && !waitingForNotifications {
             finalizeConnection(peripheral: peripheral)
         }
     }
@@ -559,12 +678,27 @@ extension FlipperBLEManager: CBPeripheralDelegate {
     ) {
         if let error {
             logger.error("Notification state update failed: \(error.localizedDescription)")
+            // Still try to finalize if we were waiting
+            if waitingForNotifications {
+                waitingForNotifications = false
+                if serialTxCharacteristic != nil && serialRxCharacteristic != nil {
+                    finalizeConnection(peripheral: peripheral)
+                }
+            }
             return
         }
 
         if characteristic.uuid == Self.serialRxUUID && characteristic.isNotifying {
             notificationsReady = true
             logger.info("Serial RX notifications enabled")
+
+            // Now finalize the connection — notifications are confirmed ready
+            if waitingForNotifications {
+                waitingForNotifications = false
+                if serialTxCharacteristic != nil && serialRxCharacteristic != nil {
+                    finalizeConnection(peripheral: peripheral)
+                }
+            }
         }
     }
 
@@ -609,28 +743,13 @@ extension FlipperBLEManager: CBPeripheralDelegate {
             return
         }
 
-        // Update device RSSI
-        if var device = connectedDevice {
-            device.rssi = RSSI.intValue
-            connectedDevice = device
+        // Update device RSSI on main thread
+        DispatchQueue.main.async {
+            if var device = self.connectedDevice {
+                device.rssi = RSSI.intValue
+                self.connectedDevice = device
+            }
         }
-    }
-
-    // MARK: - Connection Finalization
-
-    private func finalizeConnection(peripheral: CBPeripheral) {
-        let deviceName = peripheral.name ?? "Flipper Zero"
-
-        connectedDevice = FlipperDevice(
-            id: peripheral.identifier.uuidString,
-            name: deviceName,
-            rssi: 0,
-            isConnected: true
-        )
-        connectionState = .connected
-
-        startKeepalive()
-        logger.info("Flipper connection fully established: \(deviceName)")
     }
 }
 

@@ -168,6 +168,14 @@ struct ResourceBrowserView: View {
                 }
             }
 
+            if let success = viewModel.downloadSuccess {
+                Section {
+                    Label(success, systemImage: "checkmark.circle")
+                        .foregroundStyle(.green)
+                        .font(.caption)
+                }
+            }
+
             if let error = viewModel.error {
                 Section {
                     Label(error, systemImage: "exclamationmark.triangle")

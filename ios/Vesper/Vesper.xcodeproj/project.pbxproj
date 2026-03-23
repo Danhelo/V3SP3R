@@ -55,6 +55,14 @@
 		F0FF717912847F49FF916620 /* SecureStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 046DB5927DA1D6D1A26BFBE3 /* SecureStorage.swift */; };
 		FABC8426DEC83F7BFA73B601 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10FCC7DD8726FBF55A07B20 /* ChatViewModel.swift */; };
 		FB8E0F6A31B36E8AC86540EB /* ChatStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2015F1AC60D0089281065CB /* ChatStore.swift */; };
+		AA11BB22CC33DD44EE550001 /* SignalArsenalViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE660001 /* SignalArsenalViewModel.swift */; };
+		AA11BB22CC33DD44EE550002 /* SignalArsenalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE660002 /* SignalArsenalView.swift */; };
+		BB11CC22DD33EE44FF550001 /* SpectralOracleViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11CC22DD33EE44FF660001 /* SpectralOracleViewModel.swift */; };
+		BB11CC22DD33EE44FF550002 /* SpectralOracleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11CC22DD33EE44FF660002 /* SpectralOracleView.swift */; };
+		CC22DD33EE44FF55AA001001 /* DeviceTrackerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC22DD33EE44FF66AA001001 /* DeviceTrackerViewModel.swift */; };
+		CC22DD33EE44FF55AA001002 /* DeviceTrackerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC22DD33EE44FF66AA001002 /* DeviceTrackerView.swift */; };
+		CC22DD33EE44FF55AA002001 /* ChimeraLabViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC22DD33EE44FF66AA002001 /* ChimeraLabViewModel.swift */; };
+		CC22DD33EE44FF55AA002002 /* ChimeraLabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC22DD33EE44FF66AA002002 /* ChimeraLabView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -115,8 +123,16 @@
 		F015CF203C2E15DDDFB8DD09 /* ResourceBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceBrowserView.swift; sourceTree = "<group>"; };
 		F2A72D45870CDE8861BCA0C3 /* TTSService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTSService.swift; sourceTree = "<group>"; };
 		F58650F58AE1EEAE2948F4CA /* VesperAgent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VesperAgent.swift; sourceTree = "<group>"; };
-		FC005AA323F921941E1C9643 /* Vesper.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Vesper.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FC005AA323F921941E1C9643 /* Vesper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Vesper.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FEE2A083EDF57EAE48C3D513 /* FlipperBLEManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlipperBLEManager.swift; sourceTree = "<group>"; };
+		AA11BB22CC33DD44EE660001 /* SignalArsenalViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalArsenalViewModel.swift; sourceTree = "<group>"; };
+		AA11BB22CC33DD44EE660002 /* SignalArsenalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalArsenalView.swift; sourceTree = "<group>"; };
+		BB11CC22DD33EE44FF660001 /* SpectralOracleViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpectralOracleViewModel.swift; sourceTree = "<group>"; };
+		BB11CC22DD33EE44FF660002 /* SpectralOracleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpectralOracleView.swift; sourceTree = "<group>"; };
+		CC22DD33EE44FF66AA001001 /* DeviceTrackerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceTrackerViewModel.swift; sourceTree = "<group>"; };
+		CC22DD33EE44FF66AA001002 /* DeviceTrackerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceTrackerView.swift; sourceTree = "<group>"; };
+		CC22DD33EE44FF66AA002001 /* ChimeraLabViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChimeraLabViewModel.swift; sourceTree = "<group>"; };
+		CC22DD33EE44FF66AA002002 /* ChimeraLabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChimeraLabView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -131,6 +147,42 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		CC22DD33EE44FF77AA001001 /* DeviceTracker */ = {
+			isa = PBXGroup;
+			children = (
+				CC22DD33EE44FF66AA001002 /* DeviceTrackerView.swift */,
+				CC22DD33EE44FF66AA001001 /* DeviceTrackerViewModel.swift */,
+			);
+			path = DeviceTracker;
+			sourceTree = "<group>";
+		};
+		CC22DD33EE44FF77AA002001 /* ChimeraLab */ = {
+			isa = PBXGroup;
+			children = (
+				CC22DD33EE44FF66AA002002 /* ChimeraLabView.swift */,
+				CC22DD33EE44FF66AA002001 /* ChimeraLabViewModel.swift */,
+			);
+			path = ChimeraLab;
+			sourceTree = "<group>";
+		};
+		AA11BB22CC33DD44EE770001 /* SignalArsenal */ = {
+			isa = PBXGroup;
+			children = (
+				AA11BB22CC33DD44EE660002 /* SignalArsenalView.swift */,
+				AA11BB22CC33DD44EE660001 /* SignalArsenalViewModel.swift */,
+			);
+			path = SignalArsenal;
+			sourceTree = "<group>";
+		};
+		BB11CC22DD33EE44FF770001 /* SpectralOracle */ = {
+			isa = PBXGroup;
+			children = (
+				BB11CC22DD33EE44FF660002 /* SpectralOracleView.swift */,
+				BB11CC22DD33EE44FF660001 /* SpectralOracleViewModel.swift */,
+			);
+			path = SpectralOracle;
+			sourceTree = "<group>";
+		};
 		20255F7FB792B5540F65DEDC /* ResourceBrowser */ = {
 			isa = PBXGroup;
 			children = (
@@ -206,6 +258,10 @@
 				FE94E1902F2551B40BA95A0D /* PayloadLab */,
 				20255F7FB792B5540F65DEDC /* ResourceBrowser */,
 				CE377167B9B356D4955A6811 /* Settings */,
+				AA11BB22CC33DD44EE770001 /* SignalArsenal */,
+				BB11CC22DD33EE44FF770001 /* SpectralOracle */,
+				CC22DD33EE44FF77AA002001 /* ChimeraLab */,
+				CC22DD33EE44FF77AA001001 /* DeviceTracker */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -437,7 +493,6 @@
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					40E30AA22B946D44519CD2CD = {
-						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -514,6 +569,10 @@
 				0DA273CFEB1D7E22AD2CA7BA /* ResourceBrowserView.swift in Sources */,
 				5AEB7C6F143A0E1DE76E5792 /* ResourceBrowserViewModel.swift in Sources */,
 				EBC54FC350812702134100BB /* RiskAssessor.swift in Sources */,
+				AA11BB22CC33DD44EE550001 /* SignalArsenalViewModel.swift in Sources */,
+				AA11BB22CC33DD44EE550002 /* SignalArsenalView.swift in Sources */,
+				BB11CC22DD33EE44FF550001 /* SpectralOracleViewModel.swift in Sources */,
+				BB11CC22DD33EE44FF550002 /* SpectralOracleView.swift in Sources */,
 				F0FF717912847F49FF916620 /* SecureStorage.swift in Sources */,
 				8B444D37D6179A131DF48CAD /* SettingsStore.swift in Sources */,
 				86AEB9FE6F988455209459EF /* SettingsView.swift in Sources */,
@@ -524,6 +583,10 @@
 				3D8410B21C3F9247007A3E0C /* VesperApp.swift in Sources */,
 				14DA008179B21F7426329CE1 /* VesperPrompts.swift in Sources */,
 				A56AF2998978D324F6FCD48A /* VesperWidget.swift in Sources */,
+				CC22DD33EE44FF55AA001001 /* DeviceTrackerViewModel.swift in Sources */,
+				CC22DD33EE44FF55AA001002 /* DeviceTrackerView.swift in Sources */,
+				CC22DD33EE44FF55AA002001 /* ChimeraLabViewModel.swift in Sources */,
+				CC22DD33EE44FF55AA002002 /* ChimeraLabView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -561,7 +624,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = G9AHYNUW24;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -584,7 +647,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = G9AHYNUW24;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

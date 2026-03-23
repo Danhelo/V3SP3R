@@ -43,6 +43,7 @@ struct ChatView: View {
                 }
                 .padding(.vertical, 12)
             }
+            .scrollDismissesKeyboard(.interactively)
             .onChange(of: viewModel.conversationState.messages.count) { _, _ in
                 if let lastMessage = viewModel.conversationState.messages.last {
                     withAnimation(.easeOut(duration: 0.3)) {
@@ -55,6 +56,70 @@ struct ChatView: View {
 
     @ViewBuilder
     private var approvalBanner: some View {
+        if let approval = viewModel.conversationState.pendingApproval {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Image(systemName: approval.riskAssessment.level == .high
+                          ? "exclamationmark.shield.fill"
+                          : "shield.lefthalf.filled")
+                        .foregroundStyle(approval.riskAssessment.level == .high ? .red : .orange)
+                    Text("\(approval.riskAssessment.level.rawValue.uppercased()) Risk")
+                        .font(.caption.bold())
+                        .foregroundStyle(approval.riskAssessment.level == .high ? .red : .orange)
+                    Spacer()
+                }
+
+                Text(approval.command.action.rawValue.replacingOccurrences(of: "_", with: " ").capitalized)
+                    .font(.subheadline.bold())
+
+                Text(approval.riskAssessment.reason)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                if !approval.command.justification.isEmpty {
+                    Text(approval.command.justification)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .italic()
+                }
+
+                if let diff = approval.diff {
+                    Text(diff.unifiedDiff)
+                        .font(.system(.caption2, design: .monospaced))
+                        .padding(6)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color(.systemGray6))
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        .lineLimit(10)
+                }
+
+                HStack(spacing: 12) {
+                    Button(role: .destructive) {
+                        viewModel.denyCommand(approval.id)
+                    } label: {
+                        Text("Deny")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+
+                    Button {
+                        viewModel.approveCommand(approval.id)
+                    } label: {
+                        Text("Approve")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(approval.riskAssessment.level == .high ? .red : .orange)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(
+                (approval.riskAssessment.level == .high ? Color.red : Color.orange)
+                    .opacity(0.08)
+            )
+        }
+
         if let error = viewModel.conversationState.error {
             HStack {
                 Image(systemName: "exclamationmark.triangle.fill")

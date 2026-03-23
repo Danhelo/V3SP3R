@@ -10,8 +10,8 @@ struct ResourceRepo: Identifiable {
 
     static let knownRepos: [ResourceRepo] = [
         ResourceRepo(id: "UberGuidoZ/Flipper", name: "UberGuidoZ Flipper", description: "Large collection of Sub-GHz, IR, NFC, BadUSB files", owner: "UberGuidoZ", icon: "folder.fill", category: "Multi"),
-        ResourceRepo(id: "logickworkshop/Flipper-IRDB", name: "Flipper IRDB", description: "Infrared remote database", owner: "logickworkshop", icon: "infrared", category: "IR"),
-        ResourceRepo(id: "UberGuidoZ/Flipper-IRDB", name: "UberGuidoZ IRDB", description: "Extended IR database", owner: "UberGuidoZ", icon: "infrared", category: "IR"),
+        ResourceRepo(id: "logickworkshop/Flipper-IRDB", name: "Flipper IRDB", description: "Infrared remote database", owner: "logickworkshop", icon: "dot.radiowaves.right", category: "IR"),
+        ResourceRepo(id: "UberGuidoZ/Flipper-IRDB", name: "UberGuidoZ IRDB", description: "Extended IR database", owner: "UberGuidoZ", icon: "dot.radiowaves.right", category: "IR"),
         ResourceRepo(id: "jamisonderek/flipper-zero-tutorials", name: "Tutorials & Files", description: "Tutorials and example files", owner: "jamisonderek", icon: "book", category: "Education"),
     ]
 }
@@ -97,9 +97,12 @@ class ResourceBrowserViewModel {
         }
     }
 
+    var downloadSuccess: String?
+
     func downloadFile(_ entry: RepoFileEntry) {
         guard let repo = selectedRepo else { return }
         isDownloading = entry.name
+        downloadSuccess = nil
 
         Task {
             let destPath = "/ext/downloads/\(entry.name)"
@@ -115,7 +118,9 @@ class ResourceBrowserViewModel {
                 expectedEffect: "File saved to \(destPath)"
             )
             let result = await commandExecutor.execute(command, sessionId: UUID().uuidString)
-            if !result.success {
+            if result.success {
+                downloadSuccess = "Downloaded \(entry.name) to \(destPath)"
+            } else {
                 error = result.error ?? "Download failed"
             }
             isDownloading = nil
@@ -135,7 +140,46 @@ class ResourceBrowserViewModel {
                 expectedEffect: "Return search results"
             )
             let result = await commandExecutor.execute(command, sessionId: UUID().uuidString)
-            if !result.success {
+            if result.success {
+                if let resultEntries = result.data?.entries {
+                    // Parse search results as repo file entries
+                    selectedRepo = ResourceRepo(
+                        id: "search",
+                        name: "Search: \(searchQuery)",
+                        description: "GitHub search results",
+                        owner: "",
+                        icon: "magnifyingglass",
+                        category: "Search"
+                    )
+                    pathHistory = [""]
+                    currentPath = ""
+                    entries = resultEntries.map { entry in
+                        RepoFileEntry(
+                            name: entry.name,
+                            path: entry.path,
+                            isDirectory: entry.isDirectory,
+                            downloadUrl: nil,
+                            size: entry.size
+                        )
+                    }
+                } else if let content = result.data?.content {
+                    // If results come as text content, show as message
+                    self.error = nil
+                    selectedRepo = ResourceRepo(
+                        id: "search",
+                        name: "Search: \(searchQuery)",
+                        description: content,
+                        owner: "",
+                        icon: "magnifyingglass",
+                        category: "Search"
+                    )
+                    pathHistory = [""]
+                    currentPath = ""
+                    entries = []
+                } else {
+                    entries = []
+                }
+            } else {
                 self.error = result.error ?? "Search failed"
             }
             isLoading = false

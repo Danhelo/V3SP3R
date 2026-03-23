@@ -15,6 +15,9 @@ class SettingsViewModel {
     var glassesBridgeUrl: String = ""
     var showApiKeyField: Bool = false
     var saveError: String?
+    var autoConnect: Bool = false
+    var lastDeviceName: String?
+    var defaultProjectPath: String = "/ext/"
 
     static let availableModels: [(id: String, name: String)] = [
         // Top tier — best tool calling
@@ -45,6 +48,9 @@ class SettingsViewModel {
         autoApproveHigh = settingsStore.autoApproveHigh
         glassesEnabled = settingsStore.glassesEnabled
         glassesBridgeUrl = settingsStore.glassesBridgeUrl
+        autoConnect = settingsStore.autoConnect
+        lastDeviceName = settingsStore.lastDeviceName
+        defaultProjectPath = settingsStore.defaultProjectPath
 
         if let key = secureStorage.loadAPIKey() {
             hasApiKey = true
@@ -92,6 +98,11 @@ class SettingsViewModel {
     func saveGlassesSettings() {
         settingsStore.glassesEnabled = glassesEnabled
         settingsStore.glassesBridgeUrl = glassesBridgeUrl
+    }
+
+    func saveDeviceSettings() {
+        settingsStore.autoConnect = autoConnect
+        settingsStore.defaultProjectPath = defaultProjectPath
     }
 
     private func maskApiKey(_ key: String) -> String {

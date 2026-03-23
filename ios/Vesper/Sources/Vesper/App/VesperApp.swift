@@ -26,7 +26,11 @@ class ServiceLocator: ObservableObject {
     lazy var auditStoreImpl = InMemoryAuditStore()
 
     // BLE layer
-    lazy var bleManager = FlipperBLEManager()
+    lazy var bleManager: FlipperBLEManager = {
+        let manager = FlipperBLEManager()
+        manager.settingsStore = settingsStore
+        return manager
+    }()
     lazy var flipperProtocol = FlipperProtocol(bleManager: bleManager)
     lazy var fileSystem = FlipperFileSystem(protocol: flipperProtocol)
 
@@ -79,13 +83,25 @@ class ServiceLocator: ObservableObject {
         commandExecutor: commandExecutor,
         auditService: auditService
     )
-    lazy var alchemyLabViewModel = AlchemyLabViewModel(fileSystem: fileSystem)
+    lazy var alchemyLabViewModel = AlchemyLabViewModel(
+        payloadEngine: payloadEngine,
+        fileSystem: fileSystem,
+        commandExecutor: commandExecutor
+    )
     lazy var payloadLabViewModel = PayloadLabViewModel(
         payloadEngine: payloadEngine,
-        fileSystem: fileSystem
+        fileSystem: fileSystem,
+        commandExecutor: commandExecutor
     )
     lazy var fapHubViewModel = FapHubViewModel(commandExecutor: commandExecutor)
     lazy var resourceBrowserViewModel = ResourceBrowserViewModel(commandExecutor: commandExecutor)
+    lazy var signalArsenalViewModel = SignalArsenalViewModel(commandExecutor: commandExecutor)
+    lazy var deviceTrackerViewModel = DeviceTrackerViewModel(bleManager: bleManager)
+    lazy var chimeraLabViewModel = ChimeraLabViewModel(commandExecutor: commandExecutor)
+    lazy var spectralOracleViewModel = SpectralOracleViewModel(
+        commandExecutor: commandExecutor,
+        vesperAgent: vesperAgent
+    )
 }
 
 struct ContentView: View {
@@ -138,6 +154,36 @@ struct ToolsMenuView: View {
                     PayloadLabView(viewModel: services.payloadLabViewModel)
                 } label: {
                     Label("Payload Lab", systemImage: "wand.and.stars")
+                }
+
+                NavigationLink {
+                    ChimeraLabView(viewModel: services.chimeraLabViewModel)
+                } label: {
+                    Label("Chimera Lab", systemImage: "circle.hexagongrid")
+                }
+            }
+
+            Section("Intelligence") {
+                NavigationLink {
+                    SpectralOracleView(viewModel: services.spectralOracleViewModel)
+                } label: {
+                    Label("Spectral Oracle", systemImage: "sparkles")
+                }
+            }
+
+            Section("Recon") {
+                NavigationLink {
+                    DeviceTrackerView(viewModel: services.deviceTrackerViewModel)
+                } label: {
+                    Label("Device Tracker", systemImage: "location.viewfinder")
+                }
+            }
+
+            Section("Arsenal") {
+                NavigationLink {
+                    SignalArsenalView(viewModel: services.signalArsenalViewModel)
+                } label: {
+                    Label("Signal Arsenal", systemImage: "antenna.radiowaves.left.and.right")
                 }
             }
 

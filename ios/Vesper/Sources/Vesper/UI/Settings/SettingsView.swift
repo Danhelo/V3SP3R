@@ -8,6 +8,7 @@ struct SettingsView: View {
             apiKeySection
             modelSection
             approvalSection
+            deviceSection
             glassesSection
             aboutSection
         }
@@ -89,6 +90,30 @@ struct SettingsView: View {
             Text("Approval Tiers")
         } footer: {
             Text("Medium: file writes, signal transmission, payload generation.\nHigh: deletions, moves, BadUSB, app installs.\nBlocked operations always require settings unlock.")
+        }
+    }
+
+    private var deviceSection: some View {
+        Section {
+            Toggle("Auto-Connect to last device", isOn: $viewModel.autoConnect)
+                .onChange(of: viewModel.autoConnect) { _, _ in
+                    viewModel.saveDeviceSettings()
+                }
+
+            if let deviceName = viewModel.lastDeviceName {
+                LabeledContent("Last Device", value: deviceName)
+            }
+
+            TextField("Default Project Path", text: $viewModel.defaultProjectPath)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+                .onSubmit {
+                    viewModel.saveDeviceSettings()
+                }
+        } header: {
+            Text("Device & Connection")
+        } footer: {
+            Text("Auto-connect will attempt to reconnect to the last paired Flipper on launch.")
         }
     }
 

@@ -19,6 +19,11 @@ final class SettingsStore: SettingsStoreProtocol, @unchecked Sendable {
         static let glassesEnabled = "vesper_glasses_enabled"
         static let glassesBridgeUrl = "vesper_glasses_bridge_url"
         static let protectedPathsUnlocked = "vesper_protected_paths_unlocked"
+        static let lastDeviceAddress = "vesper_last_device_address"
+        static let lastDeviceName = "vesper_last_device_name"
+        static let lastChatSessionId = "vesper_last_chat_session_id"
+        static let autoConnect = "vesper_auto_connect"
+        static let defaultProjectPath = "vesper_default_project_path"
     }
 
     // MARK: - Defaults
@@ -46,6 +51,12 @@ final class SettingsStore: SettingsStoreProtocol, @unchecked Sendable {
         } else {
             _protectedPathsUnlocked = []
         }
+
+        _lastDeviceAddress = defaults.string(forKey: Keys.lastDeviceAddress)
+        _lastDeviceName = defaults.string(forKey: Keys.lastDeviceName)
+        _lastChatSessionId = defaults.string(forKey: Keys.lastChatSessionId)
+        _autoConnect = defaults.bool(forKey: Keys.autoConnect)
+        _defaultProjectPath = defaults.string(forKey: Keys.defaultProjectPath) ?? "/ext/"
     }
 
     // MARK: - Properties
@@ -106,6 +117,51 @@ final class SettingsStore: SettingsStoreProtocol, @unchecked Sendable {
     private var _glassesEnabled: Bool
     private var _glassesBridgeUrl: String
     private var _protectedPathsUnlocked: Set<String>
+    private var _lastDeviceAddress: String?
+    private var _lastDeviceName: String?
+    private var _lastChatSessionId: String?
+    private var _autoConnect: Bool
+    private var _defaultProjectPath: String
+
+    var lastDeviceAddress: String? {
+        get { _lastDeviceAddress }
+        set {
+            _lastDeviceAddress = newValue
+            defaults.set(newValue, forKey: Keys.lastDeviceAddress)
+        }
+    }
+
+    var lastDeviceName: String? {
+        get { _lastDeviceName }
+        set {
+            _lastDeviceName = newValue
+            defaults.set(newValue, forKey: Keys.lastDeviceName)
+        }
+    }
+
+    var lastChatSessionId: String? {
+        get { _lastChatSessionId }
+        set {
+            _lastChatSessionId = newValue
+            defaults.set(newValue, forKey: Keys.lastChatSessionId)
+        }
+    }
+
+    var autoConnect: Bool {
+        get { _autoConnect }
+        set {
+            _autoConnect = newValue
+            defaults.set(newValue, forKey: Keys.autoConnect)
+        }
+    }
+
+    var defaultProjectPath: String {
+        get { _defaultProjectPath }
+        set {
+            _defaultProjectPath = newValue
+            defaults.set(newValue, forKey: Keys.defaultProjectPath)
+        }
+    }
 
     // MARK: - Protected Path Helpers
 

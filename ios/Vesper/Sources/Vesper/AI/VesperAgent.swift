@@ -151,6 +151,7 @@ final class VesperAgent {
 
     /// Continue after the user approves or rejects a pending action.
     func continueAfterApproval(approvalId: String, approved: Bool) async {
+        conversationState.pendingApproval = nil
         conversationState.isLoading = true
         conversationState.progress = AgentProgress(
             stage: .toolExecution,
@@ -350,6 +351,7 @@ final class VesperAgent {
                         if let pendingApproval = commandExecutor.getPendingApproval(approvalId) {
                             conversationState.messages = messages
                             conversationState.isLoading = false
+                            conversationState.pendingApproval = pendingApproval
                             conversationState.progress = AgentProgress(
                                 stage: .approval,
                                 detail: "Approval required to continue."

@@ -27,7 +27,14 @@ struct DeviceView: View {
         }
         .onAppear {
             if viewModel.connectedDevice != nil {
+                // Already connected — just refresh info, don't restart scanning
                 viewModel.loadDeviceInfo()
+            }
+        }
+        .onDisappear {
+            // Stop scanning when navigating away to avoid wasted BLE activity
+            if viewModel.isScanning {
+                viewModel.stopScanning()
             }
         }
     }

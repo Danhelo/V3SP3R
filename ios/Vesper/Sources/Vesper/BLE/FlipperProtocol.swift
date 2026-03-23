@@ -46,7 +46,7 @@ class FlipperProtocol {
     private var currentRequestId: UInt32 = 0
     private var responseBuffer = Data()
     private let commandQueue = DispatchQueue(label: "com.vesper.flipper.protocol", qos: .userInitiated)
-    private let actor = ProtocolActor()
+    private let protocolActor = ProtocolActor()
 
     // Legacy frame command types (matching Android constants)
     private static let cmdList: UInt8 = 0x02
@@ -85,9 +85,18 @@ class FlipperProtocol {
     private static let fieldAppStartRequest: UInt32 = 40
 
     private static let maxFrameSize = 256 * 1024
-    private static let commandTimeoutNs: UInt64 = 5_000_000_000 // 5 seconds
-    private static let cliTimeoutNs: UInt64 = 3_000_000_000 // 3 seconds
-    private static let writeChunkSize = 512
+
+    // Timeout constants matching Android FlipperProtocol.kt
+    private static let commandTimeoutNs: UInt64 = 5_000_000_000     // 5s (COMMAND_TIMEOUT_MS)
+    private static let cliTimeoutNs: UInt64 = 3_000_000_000         // 3s (RAW_CLI_TIMEOUT_MS)
+    private static let cliQuietPeriodNs: UInt64 = 220_000_000       // 220ms (RAW_CLI_QUIET_PERIOD_MS)
+    private static let rpcStorageTimeoutNs: UInt64 = 4_000_000_000  // 4s (RPC_STORAGE_COMMAND_TIMEOUT_MS)
+    private static let rpcContinuationWindowNs: UInt64 = 900_000_000 // 900ms continuation window
+    private static let writeChunkSize = 512                          // matches Android
+    private static let writeChunkDelayNs: UInt64 = 16_000_000       // 16ms (WRITE_CHUNK_DELAY_MS)
+    private static let rpcWriteBaseTimeoutNs: UInt64 = 8_000_000_000 // 8s base for writes
+    private static let rpcWritePerKiBTimeoutNs: UInt64 = 450_000_000 // 450ms per KiB
+    private static let commandMutexTimeoutNs: UInt64 = 15_000_000_000 // 15s lock timeout
 
     init(bleManager: FlipperBLEManager) {
         self.bleManager = bleManager
@@ -103,32 +112,38 @@ class FlipperProtocol {
     // MARK: - Public API
 
     func sendCommand(_ command: FlipperCommand) async throws -> ProtocolResponse {
-        switch command {
-        case .listDirectory(let path):
-            return await listDirectory(path: path)
-        case .readFile(let path):
-            return await readFile(path: path)
-        case .writeFile(let path, let data):
-            return await writeFile(path: path, data: data)
-        case .deleteFile(let path, let recursive):
-            return await deleteFile(path: path, recursive: recursive)
-        case .createDirectory(let path):
-            return await createDirectory(path: path)
-        case .move(let source, let dest):
-            return await moveFile(sourcePath: source, destPath: dest)
-        case .getDeviceInfo:
-            return await getDeviceInfo()
-        case .getStorageInfo:
-            return await getStorageInfo()
-        case .appStart(let name, let args):
-            return await appStart(name: name, args: args)
-        case .cli(let command):
-            return await sendCliCommandInternal(command)
+        // All commands go through the actor for serialization
+        return await protocolActor.execute {
+            switch command {
+            case .listDirectory(let path):
+                return await self.listDirectory(path: path)
+            case .readFile(let path):
+                return await self.readFile(path: path)
+            case .writeFile(let path, let data):
+                return await self.writeFile(path: path, data: data)
+            case .deleteFile(let path, let recursive):
+                return await self.deleteFile(path: path, recursive: recursive)
+            case .createDirectory(let path):
+                return await self.createDirectory(path: path)
+            case .move(let source, let dest):
+                return await self.moveFile(sourcePath: source, destPath: dest)
+            case .getDeviceInfo:
+                return await self.getDeviceInfo()
+            case .getStorageInfo:
+                return await self.getStorageInfo()
+            case .appStart(let name, let args):
+                return await self.appStart(name: name, args: args)
+            case .cli(let command):
+                return await self.sendCliCommandInternal(command)
+            }
         }
     }
 
     func sendCliCommand(_ command: String) async throws -> String {
-        let response = await sendCliCommandInternal(command)
+        // Serialized through actor
+        let response = await protocolActor.execute {
+            await self.sendCliCommandInternal(command)
+        }
         switch response {
         case .success(let msg):
             return msg
@@ -175,6 +190,25 @@ class FlipperProtocol {
         innerMessage.append(encodeLengthDelimitedField(fieldNumber: 2, value: fileMessage))
 
         return buildMainMessage(contentFieldNumber: Self.fieldStorageWriteRequest, contentMessage: innerMessage)
+    }
+
+    /// Build a StorageWriteRequest for a single chunk (used by chunked write).
+    /// When hasNext is true, the message indicates more chunks follow.
+    func buildStorageWriteChunkRequest(path: String, data: Data, hasNext: Bool) -> Data {
+        // File message: { FileType type = 1; string name = 2; uint32 size = 3; bytes data = 4; }
+        var fileMessage = Data()
+        fileMessage.append(encodeVarintField(fieldNumber: 1, value: 0)) // FILE type = 0
+        let fileName = (path as NSString).lastPathComponent
+        fileMessage.append(encodeStringField(fieldNumber: 2, value: fileName))
+        fileMessage.append(encodeVarintField(fieldNumber: 3, value: UInt64(data.count)))
+        fileMessage.append(encodeBytesField(fieldNumber: 4, value: data))
+
+        // WriteRequest: { string path = 1; File file = 2; }
+        var innerMessage = Data()
+        innerMessage.append(encodeStringField(fieldNumber: 1, value: path))
+        innerMessage.append(encodeLengthDelimitedField(fieldNumber: 2, value: fileMessage))
+
+        return buildMainMessage(contentFieldNumber: Self.fieldStorageWriteRequest, contentMessage: innerMessage, hasNext: hasNext)
     }
 
     /// Build a StorageDeleteRequest: field 1 (path) = string, field 2 (recursive) = bool
@@ -248,16 +282,79 @@ class FlipperProtocol {
         }
     }
 
+    // MARK: - Multi-Packet Response Support
+
+    /// Check if a protobuf Main response has has_next=true (field 3, varint wire type, value 1).
+    private func responseHasNext(_ data: Data) -> Bool {
+        var offset = data.startIndex
+        while offset < data.endIndex {
+            guard let (fieldNumber, wireType, newOffset) = readTag(from: data, at: offset) else { return false }
+            offset = newOffset
+
+            switch wireType {
+            case 0: // varint
+                guard let (value, nextOff) = readVarint(from: data, at: offset) else { return false }
+                offset = nextOff
+                if fieldNumber == Self.fieldHasNext {
+                    return value == 1
+                }
+            case 2: // length-delimited — skip over
+                guard let (length, lenOffset) = readVarint(from: data, at: offset) else { return false }
+                offset = lenOffset + Int(length)
+            case 1: // 64-bit
+                offset += 8
+            case 5: // 32-bit
+                offset += 4
+            default:
+                return false
+            }
+        }
+        return false
+    }
+
+    /// Send an RPC frame and collect all continuation frames (hasNext=true).
+    /// Returns the array of all response Data frames.
+    private func sendRpcAndCollectResponses(_ rpcFrame: Data, timeout: UInt64 = commandTimeoutNs) async throws -> [Data] {
+        var frames: [Data] = []
+
+        // Send the initial frame and get first response
+        let firstResponse = try await bleManager.sendFramedData(rpcFrame)
+        frames.append(firstResponse)
+
+        // Collect continuation frames while hasNext is true
+        while responseHasNext(frames.last!) {
+            // Wait for the next frame with a continuation timeout window
+            let continuationData = try await withThrowingTimeout(nanoseconds: Self.rpcContinuationWindowNs) { [weak self] in
+                guard let self else { throw FlipperProtocolError.disconnected }
+                // Poll for data arriving in the response buffer
+                let quietPeriodNs: UInt64 = 100_000_000 // 100ms poll interval
+                let startTime = ContinuousClock.now
+                while ContinuousClock.now - startTime < .milliseconds(900) {
+                    try await Task.sleep(nanoseconds: quietPeriodNs)
+                    if !self.responseBuffer.isEmpty {
+                        let collected = self.responseBuffer
+                        self.responseBuffer.removeAll()
+                        return collected
+                    }
+                }
+                throw FlipperProtocolError.timeout
+            }
+            frames.append(continuationData)
+        }
+
+        return frames
+    }
+
     // MARK: - Private Command Implementations
 
     private func listDirectory(path: String) async -> ProtocolResponse {
         // Try RPC first, fall back to legacy
         let rpcData = buildStorageListRequest(path: path)
-        let rpcFrame = wrapWithLengthPrefix(rpcData)
+        let rpcFrame = wrapRpcWithVarintPrefix(rpcData)
 
         do {
-            let responseData = try await bleManager.sendFramedData(rpcFrame)
-            let parsed = parseResponse(responseData)
+            let frames = try await sendRpcAndCollectResponses(rpcFrame, timeout: Self.rpcStorageTimeoutNs)
+            let parsed = parseMultiFrameResponse(frames)
             if case .error = parsed {
                 return await sendLegacyCommand(type: Self.cmdList, payload: path.data(using: .utf8) ?? Data())
             }
@@ -269,11 +366,11 @@ class FlipperProtocol {
 
     private func readFile(path: String) async -> ProtocolResponse {
         let rpcData = buildStorageReadRequest(path: path)
-        let rpcFrame = wrapWithLengthPrefix(rpcData)
+        let rpcFrame = wrapRpcWithVarintPrefix(rpcData)
 
         do {
-            let responseData = try await bleManager.sendFramedData(rpcFrame)
-            let parsed = parseResponse(responseData)
+            let frames = try await sendRpcAndCollectResponses(rpcFrame, timeout: Self.rpcStorageTimeoutNs)
+            let parsed = parseMultiFrameResponse(frames)
             if case .error = parsed {
                 return await sendLegacyCommand(type: Self.cmdRead, payload: path.data(using: .utf8) ?? Data())
             }
@@ -294,7 +391,7 @@ class FlipperProtocol {
 
     private func writeFileSingle(path: String, data content: Data) async -> ProtocolResponse {
         let rpcData = buildStorageWriteRequest(path: path, data: content)
-        let rpcFrame = wrapWithLengthPrefix(rpcData)
+        let rpcFrame = wrapRpcWithVarintPrefix(rpcData)
 
         do {
             let responseData = try await bleManager.sendFramedData(rpcFrame)
@@ -308,16 +405,51 @@ class FlipperProtocol {
         }
     }
 
+    /// Chunked write matching Android: intermediate chunks use hasNext=true and are sent
+    /// fire-and-forget. Only the final chunk waits for a response.
     private func writeFileChunked(path: String, data content: Data) async -> ProtocolResponse {
+        let totalChunks = (content.count + Self.writeChunkSize - 1) / Self.writeChunkSize
+        // Dynamic timeout: 8s base + 450ms per KiB
+        let dynamicTimeoutNs = Self.rpcWriteBaseTimeoutNs + UInt64(content.count / 1024) * Self.rpcWritePerKiBTimeoutNs
+
         var offset = 0
+        var chunkIndex = 0
+
         while offset < content.count {
             let end = min(offset + Self.writeChunkSize, content.count)
-            let chunk = content[offset..<end]
-            let chunkData = Data(chunk)
+            let chunk = Data(content[offset..<end])
+            let isLastChunk = (end >= content.count)
+            chunkIndex += 1
 
-            let response = await writeFileSingle(path: path, data: chunkData)
-            if case .error = response {
-                return response
+            if isLastChunk {
+                // Final chunk: send with hasNext=false, wait for response
+                let rpcData = buildStorageWriteChunkRequest(path: path, data: chunk, hasNext: false)
+                let rpcFrame = wrapRpcWithVarintPrefix(rpcData)
+
+                do {
+                    let responseData = try await withThrowingTimeout(nanoseconds: dynamicTimeoutNs) { [weak self] in
+                        guard let self else { throw FlipperProtocolError.disconnected }
+                        return try await self.bleManager.sendFramedData(rpcFrame)
+                    }
+                    let parsed = parseResponse(responseData)
+                    if case .error = parsed {
+                        return parsed
+                    }
+                } catch {
+                    return .error("Chunked write failed on final chunk: \(error.localizedDescription)", nil)
+                }
+            } else {
+                // Intermediate chunk: send with hasNext=true, fire-and-forget
+                let rpcData = buildStorageWriteChunkRequest(path: path, data: chunk, hasNext: true)
+                let rpcFrame = wrapRpcWithVarintPrefix(rpcData)
+
+                do {
+                    try await bleManager.sendData(rpcFrame)
+                    // Delay between chunks (matching Android WRITE_CHUNK_DELAY_MS = 16ms)
+                    try await Task.sleep(nanoseconds: Self.writeChunkDelayNs)
+                } catch {
+                    return .error("Chunked write failed on chunk \(chunkIndex)/\(totalChunks): \(error.localizedDescription)", nil)
+                }
             }
 
             offset = end
@@ -327,7 +459,7 @@ class FlipperProtocol {
 
     private func deleteFile(path: String, recursive: Bool) async -> ProtocolResponse {
         let rpcData = buildStorageDeleteRequest(path: path, recursive: recursive)
-        let rpcFrame = wrapWithLengthPrefix(rpcData)
+        let rpcFrame = wrapRpcWithVarintPrefix(rpcData)
 
         do {
             let responseData = try await bleManager.sendFramedData(rpcFrame)
@@ -347,7 +479,7 @@ class FlipperProtocol {
 
     private func createDirectory(path: String) async -> ProtocolResponse {
         let rpcData = buildStorageMkdirRequest(path: path)
-        let rpcFrame = wrapWithLengthPrefix(rpcData)
+        let rpcFrame = wrapRpcWithVarintPrefix(rpcData)
 
         do {
             let responseData = try await bleManager.sendFramedData(rpcFrame)
@@ -363,7 +495,7 @@ class FlipperProtocol {
 
     private func moveFile(sourcePath: String, destPath: String) async -> ProtocolResponse {
         let rpcData = buildStorageRenameRequest(oldPath: sourcePath, newPath: destPath)
-        let rpcFrame = wrapWithLengthPrefix(rpcData)
+        let rpcFrame = wrapRpcWithVarintPrefix(rpcData)
 
         do {
             let responseData = try await bleManager.sendFramedData(rpcFrame)
@@ -379,23 +511,91 @@ class FlipperProtocol {
 
     private func getDeviceInfo() async -> ProtocolResponse {
         let rpcData = buildSystemInfoRequest()
-        let rpcFrame = wrapWithLengthPrefix(rpcData)
+        let rpcFrame = wrapRpcWithVarintPrefix(rpcData)
 
         do {
-            let responseData = try await bleManager.sendFramedData(rpcFrame)
-            let parsed = parseResponse(responseData)
+            let frames = try await sendRpcAndCollectResponses(rpcFrame)
+            let parsed = parseMultiFrameResponse(frames)
             if case .error = parsed {
-                return await sendLegacyCommand(type: Self.cmdInfo, payload: Data())
+                // RPC failed, try legacy binary format
+                let legacyResult = await sendLegacyCommand(type: Self.cmdInfo, payload: Data())
+                if case .error = legacyResult {
+                    // Legacy also failed, try CLI fallback
+                    return await getDeviceInfoViaCli()
+                }
+                return legacyResult
             }
             return parsed
         } catch {
-            return await sendLegacyCommand(type: Self.cmdInfo, payload: Data())
+            // RPC threw, try legacy then CLI
+            let legacyResult = await sendLegacyCommand(type: Self.cmdInfo, payload: Data())
+            if case .error = legacyResult {
+                return await getDeviceInfoViaCli()
+            }
+            return legacyResult
         }
+    }
+
+    /// CLI fallback: sends "device_info" text command and parses the key-value output.
+    private func getDeviceInfoViaCli() async -> ProtocolResponse {
+        let cliResult = await sendCliCommandInternal("device_info")
+        guard case .fileContent(let text) = cliResult, !text.isEmpty else {
+            // All fallbacks exhausted, return defaults
+            return .deviceInfo(DeviceInfo(
+                name: "Flipper Zero",
+                firmwareVersion: "0.0.0",
+                hardwareVersion: "1.0",
+                batteryLevel: 0,
+                isCharging: false
+            ))
+        }
+        return parseCliDeviceInfo(text)
+    }
+
+    /// Parses CLI "device_info" output which returns lines like "key : value".
+    private func parseCliDeviceInfo(_ text: String) -> ProtocolResponse {
+        var firmware = "unknown"
+        var hardware = "unknown"
+        var deviceName = "Flipper Zero"
+        var batteryLevel = 0
+        var isCharging = false
+
+        for line in text.components(separatedBy: .newlines) {
+            let parts = line.split(separator: ":", maxSplits: 1)
+            guard parts.count == 2 else { continue }
+            let key = parts[0].trimmingCharacters(in: .whitespaces).lowercased()
+            let value = parts[1].trimmingCharacters(in: .whitespaces)
+
+            switch key {
+            case "hardware.model", "hardware_model":
+                if !value.isEmpty { hardware = value }
+            case "hardware.name", "device_name", "hardware.body":
+                if !value.isEmpty { deviceName = value }
+            case "firmware.version", "firmware_version", "firmware.commit.hash":
+                if firmware == "unknown", !value.isEmpty { firmware = value }
+            case "hardware.ver", "hardware.target", "hardware_version", "hardware.otp.ver":
+                if hardware == "unknown", !value.isEmpty { hardware = value }
+            case "power.battery_charge", "battery_level", "power.battery.level":
+                batteryLevel = Int(value) ?? batteryLevel
+            case "power.is_charging", "charging", "power.charger":
+                isCharging = value == "1" || value.lowercased() == "true"
+            default:
+                break
+            }
+        }
+
+        return .deviceInfo(DeviceInfo(
+            name: deviceName,
+            firmwareVersion: firmware,
+            hardwareVersion: hardware,
+            batteryLevel: batteryLevel,
+            isCharging: isCharging
+        ))
     }
 
     private func getStorageInfo() async -> ProtocolResponse {
         let rpcData = buildStorageInfoRequest(path: "/ext")
-        let rpcFrame = wrapWithLengthPrefix(rpcData)
+        let rpcFrame = wrapRpcWithVarintPrefix(rpcData)
 
         do {
             let responseData = try await bleManager.sendFramedData(rpcFrame)
@@ -411,7 +611,7 @@ class FlipperProtocol {
 
     private func appStart(name: String, args: String?) async -> ProtocolResponse {
         let rpcData = buildAppStartRequest(name: name, args: args)
-        let rpcFrame = wrapWithLengthPrefix(rpcData)
+        let rpcFrame = wrapRpcWithVarintPrefix(rpcData)
 
         do {
             let responseData = try await bleManager.sendFramedData(rpcFrame)
@@ -423,31 +623,69 @@ class FlipperProtocol {
         }
     }
 
+    /// CLI command with quiet-period detection matching Android RAW_CLI_QUIET_PERIOD_MS = 220ms.
+    /// Polls every 220ms; if no new data for 220ms AND buffer has data, response is complete.
+    /// Overall timeout: 3 seconds (RAW_CLI_TIMEOUT_MS).
     private func sendCliCommandInternal(_ command: String) async -> ProtocolResponse {
         let commandData = (command + "\r\n").data(using: .utf8) ?? Data()
+
+        // Clear buffer before sending to avoid stale data
+        responseBuffer.removeAll()
 
         do {
             try await bleManager.sendData(commandData)
 
-            // Wait for CLI response with timeout
-            let responseData = try await withThrowingTimeout(nanoseconds: Self.cliTimeoutNs) { [weak self] in
-                // Collect data for a brief period
-                try await Task.sleep(nanoseconds: 500_000_000) // 500ms collection window
-                guard let self else { throw FlipperProtocolError.disconnected }
-                let collected = self.responseBuffer
-                self.responseBuffer.removeAll()
-                return collected
+            // Quiet-period detection (matching Android RAW_CLI_QUIET_PERIOD_MS = 220ms)
+            let quietPeriodNs: UInt64 = Self.cliQuietPeriodNs
+            let timeoutSeconds: Double = 3.0 // Android RAW_CLI_TIMEOUT_MS
+            let startTime = ContinuousClock.now
+            var lastDataSize = 0
+
+            while ContinuousClock.now - startTime < .seconds(timeoutSeconds) {
+                try await Task.sleep(nanoseconds: quietPeriodNs)
+
+                let currentSize = responseBuffer.count
+                if currentSize > 0 && currentSize == lastDataSize {
+                    // No new data for 220ms — response is complete
+                    break
+                }
+                lastDataSize = currentSize
             }
 
-            let responseText = String(data: responseData, encoding: .utf8)?
+            let collected = responseBuffer
+            responseBuffer.removeAll()
+
+            var text = String(data: collected, encoding: .utf8)?
                 .replacingOccurrences(of: "\0", with: "")
                 .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
-            if responseText.isEmpty {
+            if text.isEmpty {
                 return .error("No CLI response received", nil)
             }
 
-            return .fileContent(responseText)
+            // Strip echo of the sent command if present
+            if text.hasPrefix(command) {
+                text = String(text.dropFirst(command.count))
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+            // Also strip "\r\n" prefix variant
+            let commandWithCR = command + "\r\n"
+            if text.hasPrefix(commandWithCR) {
+                text = String(text.dropFirst(commandWithCR.count))
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+
+            // Strip trailing CLI prompt if present (e.g., ">: " or "\n>")
+            if let promptRange = text.range(of: "\n>", options: .backwards) {
+                text = String(text[text.startIndex..<promptRange.lowerBound])
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+            if text.hasSuffix(">:") || text.hasSuffix(">") {
+                text = String(text.dropLast(text.hasSuffix(">:") ? 2 : 1))
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+
+            return text.isEmpty ? .error("Empty CLI response", nil) : .fileContent(text)
         } catch {
             return .error("CLI command failed: \(error.localizedDescription)", nil)
         }
@@ -492,14 +730,138 @@ class FlipperProtocol {
         frame.append(commandType)
         frame.append(payload)
 
-        // Wrap with length prefix
-        return wrapWithLengthPrefix(frame)
+        // Legacy frames use 4-byte LE length prefix
+        return wrapLegacyWithLengthPrefix(frame)
     }
 
     // MARK: - Incoming Data Processing
 
     private func processIncomingData(_ data: Data) {
         responseBuffer.append(data)
+    }
+
+    // MARK: - Multi-Frame Response Parsing
+
+    /// Parse multiple response frames (from multi-packet hasNext responses) into a single ProtocolResponse.
+    private func parseMultiFrameResponse(_ frames: [Data]) -> ProtocolResponse {
+        guard !frames.isEmpty else {
+            return .error("No response frames", nil)
+        }
+
+        // Single frame — use standard parsing
+        if frames.count == 1 {
+            return parseResponse(frames[0])
+        }
+
+        // Multiple frames: merge the protobuf content across all frames
+        // We parse each frame independently and merge results
+        var allListEntries: [FileEntry] = []
+        var allFileData = Data()
+        var allKvPairs: [(String, String)] = []
+        var hasListEntries = false
+        var hasFileData = false
+        var hasStorageInfo = false
+        var totalSpace: Int64 = 0
+        var freeSpace: Int64 = 0
+        var lastCommandStatus: UInt64 = 0
+
+        for frame in frames {
+            let result = parseProtobufResponseAccumulating(
+                frame,
+                listEntries: &allListEntries,
+                fileData: &allFileData,
+                kvPairs: &allKvPairs,
+                totalSpace: &totalSpace,
+                freeSpace: &freeSpace,
+                hasListEntries: &hasListEntries,
+                hasFileData: &hasFileData,
+                hasStorageInfo: &hasStorageInfo,
+                commandStatus: &lastCommandStatus
+            )
+            // If any frame has a non-zero command status (error), return that
+            if lastCommandStatus != 0 {
+                return .error("RPC error: status \(lastCommandStatus)", Int(lastCommandStatus))
+            }
+        }
+
+        if hasListEntries {
+            return .directoryList(allListEntries)
+        }
+        if hasFileData {
+            return .binaryContent(allFileData)
+        }
+        if !allKvPairs.isEmpty {
+            return buildDeviceInfoFromKVPairs(allKvPairs)
+        }
+        if hasStorageInfo {
+            return .storageInfo(StorageInfo(
+                internalTotal: totalSpace,
+                internalFree: freeSpace,
+                hasSdCard: false
+            ))
+        }
+
+        return .success("OK")
+    }
+
+    /// Parse a single protobuf frame, accumulating results into the provided accumulators.
+    private func parseProtobufResponseAccumulating(
+        _ data: Data,
+        listEntries: inout [FileEntry],
+        fileData: inout Data,
+        kvPairs: inout [(String, String)],
+        totalSpace: inout Int64,
+        freeSpace: inout Int64,
+        hasListEntries: inout Bool,
+        hasFileData: inout Bool,
+        hasStorageInfo: inout Bool,
+        commandStatus: inout UInt64
+    ) {
+        var offset = data.startIndex
+
+        while offset < data.endIndex {
+            guard let (fieldNumber, wireType, newOffset) = readTag(from: data, at: offset) else { break }
+            offset = newOffset
+
+            switch wireType {
+            case 0: // varint
+                guard let (value, nextOff) = readVarint(from: data, at: offset) else { return }
+                offset = nextOff
+                if fieldNumber == Self.fieldCommandStatus {
+                    commandStatus = value
+                }
+
+            case 2: // length-delimited
+                guard let (length, lenOffset) = readVarint(from: data, at: offset) else { return }
+                let contentStart = lenOffset
+                let contentEnd = contentStart + Int(length)
+                guard contentEnd <= data.endIndex else { return }
+                let content = data[contentStart..<contentEnd]
+                offset = contentEnd
+
+                switch fieldNumber {
+                case Self.fieldStorageListRequest + 100: // StorageListResponse at field 120
+                    parseStorageListContent(content, into: &listEntries)
+                    hasListEntries = true
+                case 120: // storage_list_response
+                    parseStorageListContent(content, into: &listEntries)
+                    hasListEntries = true
+                case 121: // storage_read_response
+                    parseStorageReadContent(content, into: &fileData)
+                    hasFileData = true
+                case 132: // system_device_info_response
+                    parseDeviceInfoContent(content, into: &kvPairs)
+                case 128: // storage_info_response
+                    parseStorageInfoContent(content, totalSpace: &totalSpace, freeSpace: &freeSpace)
+                    hasStorageInfo = true
+                default:
+                    break
+                }
+
+            default:
+                break
+            }
+        }
     }
 
     // MARK: - Protobuf Wire Format Encoding
@@ -523,7 +885,7 @@ class FlipperProtocol {
     }
 
     /// Encode a varint field (wire type 0)
-    private func encodeVarintField(fieldNumber: UInt32, value: UInt64) -> Data {
+    func encodeVarintField(fieldNumber: UInt32, value: UInt64) -> Data {
         var data = Data()
         data.append(encodeTag(fieldNumber: fieldNumber, wireType: 0))
         data.append(encodeVarint(value))
@@ -560,7 +922,7 @@ class FlipperProtocol {
 
     /// Build a Flipper.Main protobuf message wrapping a content message.
     /// Main { uint32 command_id = 1; CommandStatus command_status = 2; bool has_next = 3; <content> }
-    private func buildMainMessage(contentFieldNumber: UInt32, contentMessage: Data) -> Data {
+    private func buildMainMessage(contentFieldNumber: UInt32, contentMessage: Data, hasNext: Bool = false) -> Data {
         let reqId = nextRequestId()
         var message = Data()
 
@@ -569,7 +931,10 @@ class FlipperProtocol {
 
         // Field 2: command_status = OK (0) -- omitted, default is 0
 
-        // Field 3: has_next = false -- omitted, default is false
+        // Field 3: has_next (varint, only if true)
+        if hasNext {
+            message.append(encodeVarintField(fieldNumber: Self.fieldHasNext, value: 1))
+        }
 
         // Content field (length-delimited sub-message)
         if !contentMessage.isEmpty {
@@ -583,8 +948,23 @@ class FlipperProtocol {
         return message
     }
 
+    /// Wrap RPC data with a varint length prefix (protobuf framing).
+    /// This is the correct framing for Flipper RPC messages.
+    func wrapRpcWithVarintPrefix(_ data: Data) -> Data {
+        var result = Data()
+        var length = UInt64(data.count)
+        while length > 0x7F {
+            result.append(UInt8(length & 0x7F) | 0x80)
+            length >>= 7
+        }
+        result.append(UInt8(length))
+        result.append(data)
+        return result
+    }
+
     /// Wrap data with a 4-byte little-endian length prefix (legacy frame format).
-    private func wrapWithLengthPrefix(_ data: Data) -> Data {
+    /// Used only for legacy binary protocol frames, NOT for RPC.
+    private func wrapLegacyWithLengthPrefix(_ data: Data) -> Data {
         var frame = Data()
         frame.append(contentsOf: withUnsafeBytes(of: UInt32(data.count).littleEndian) { Data($0) })
         frame.append(data)
@@ -946,14 +1326,20 @@ class FlipperProtocol {
 
             switch key {
             case "firmware.version", "firmware_version":
-                firmware = value
+                if !value.isEmpty { firmware = value }
+            case "firmware.commit.hash", "firmware_commit":
+                // Use commit hash only if we don't already have a proper version
+                if firmware == "unknown", !value.isEmpty { firmware = value }
             case "hardware.model", "hardware_model":
-                hardware = value
-            case "hardware.name", "device_name":
-                deviceName = value
-            case "power.battery_level", "battery_level":
-                batteryLevel = Int(value) ?? 0
-            case "power.is_charging", "is_charging":
+                if !value.isEmpty { hardware = value }
+            case "hardware.ver", "hardware.target", "hardware_version":
+                // Use hardware target/ver as fallback if model not available
+                if hardware == "unknown", !value.isEmpty { hardware = value }
+            case "hardware.name", "device_name", "hardware.body":
+                if !value.isEmpty { deviceName = value }
+            case "power.battery_charge", "power.battery_level", "battery_level":
+                batteryLevel = Int(value) ?? batteryLevel
+            case "power.is_charging", "is_charging", "power.charger":
                 isCharging = value == "1" || value.lowercased() == "true"
             default:
                 break
@@ -1054,6 +1440,11 @@ private actor ProtocolActor {
     func nextRequestId() -> UInt32 {
         lastRequestId += 1
         return lastRequestId
+    }
+
+    /// Execute a closure serialized through this actor, ensuring only one command runs at a time.
+    func execute<T>(_ operation: @Sendable () async -> T) async -> T {
+        await operation()
     }
 }
 

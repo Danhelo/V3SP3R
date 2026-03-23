@@ -10,6 +10,15 @@ class FileBrowserViewModel {
     var selectedFileContent: String?
     var selectedFileName: String?
     var pathHistory: [String] = ["/ext"]
+    var searchQuery: String = ""
+
+    var filteredEntries: [FileEntry] {
+        guard !searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return entries
+        }
+        let query = searchQuery.lowercased()
+        return entries.filter { $0.name.lowercased().contains(query) }
+    }
 
     init(fileSystem: FlipperFileSystem) {
         self.fileSystem = fileSystem
@@ -105,6 +114,7 @@ struct FileBrowserView: View {
                 fileList
             }
         }
+        .searchable(text: $viewModel.searchQuery, prompt: "Filter files...")
         .navigationTitle("File Browser")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -164,7 +174,7 @@ struct FileBrowserView: View {
                 }
             }
 
-            ForEach(viewModel.entries, id: \.path) { entry in
+            ForEach(viewModel.filteredEntries, id: \.path) { entry in
                 Button {
                     viewModel.navigateTo(entry)
                 } label: {
@@ -211,7 +221,7 @@ struct FileBrowserView: View {
         let ext = (name as NSString).pathExtension.lowercased()
         switch ext {
         case "sub": return "antenna.radiowaves.left.and.right"
-        case "ir": return "infrared"
+        case "ir": return "dot.radiowaves.right"
         case "nfc": return "wave.3.right"
         case "rfid": return "sensor.tag.radiowaves.forward"
         case "ibtn": return "key.fill"

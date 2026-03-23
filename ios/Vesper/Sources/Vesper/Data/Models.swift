@@ -487,6 +487,7 @@ struct ConversationState: Sendable {
     var error: String?
     var sessionId: String = UUID().uuidString
     var progress: AgentProgress?
+    var pendingApproval: PendingApproval?
 }
 
 // MARK: - Agent Progress
