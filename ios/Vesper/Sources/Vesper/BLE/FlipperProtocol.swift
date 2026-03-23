@@ -348,7 +348,7 @@ class FlipperProtocol {
     // MARK: - Private Command Implementations
 
     private func listDirectory(path: String) async -> ProtocolResponse {
-        // Try RPC first, fall back to legacy
+        // Try RPC first, fall back to CLI (not legacy binary)
         let rpcData = buildStorageListRequest(path: path)
         let rpcFrame = wrapRpcWithVarintPrefix(rpcData)
 
@@ -356,11 +356,11 @@ class FlipperProtocol {
             let frames = try await sendRpcAndCollectResponses(rpcFrame, timeout: Self.rpcStorageTimeoutNs)
             let parsed = parseMultiFrameResponse(frames)
             if case .error = parsed {
-                return await sendLegacyCommand(type: Self.cmdList, payload: path.data(using: .utf8) ?? Data())
+                return await sendCliCommandInternal("storage list \(path)")
             }
             return parsed
         } catch {
-            return await sendLegacyCommand(type: Self.cmdList, payload: path.data(using: .utf8) ?? Data())
+            return await sendCliCommandInternal("storage list \(path)")
         }
     }
 
@@ -372,11 +372,11 @@ class FlipperProtocol {
             let frames = try await sendRpcAndCollectResponses(rpcFrame, timeout: Self.rpcStorageTimeoutNs)
             let parsed = parseMultiFrameResponse(frames)
             if case .error = parsed {
-                return await sendLegacyCommand(type: Self.cmdRead, payload: path.data(using: .utf8) ?? Data())
+                return await sendCliCommandInternal("storage read \(path)")
             }
             return parsed
         } catch {
-            return await sendLegacyCommand(type: Self.cmdRead, payload: path.data(using: .utf8) ?? Data())
+            return await sendCliCommandInternal("storage read \(path)")
         }
     }
 
@@ -397,11 +397,12 @@ class FlipperProtocol {
             let responseData = try await bleManager.sendFramedData(rpcFrame)
             let parsed = parseResponse(responseData)
             if case .error = parsed {
-                return await sendLegacyWriteCommand(path: path, content: content)
+                // Fall back to CLI write
+                return await sendCliCommandInternal("storage write \(path)")
             }
             return parsed
         } catch {
-            return await sendLegacyWriteCommand(path: path, content: content)
+            return await sendCliCommandInternal("storage write \(path)")
         }
     }
 
@@ -460,20 +461,17 @@ class FlipperProtocol {
     private func deleteFile(path: String, recursive: Bool) async -> ProtocolResponse {
         let rpcData = buildStorageDeleteRequest(path: path, recursive: recursive)
         let rpcFrame = wrapRpcWithVarintPrefix(rpcData)
+        let cliCmd = recursive ? "storage remove_recursive \(path)" : "storage remove \(path)"
 
         do {
             let responseData = try await bleManager.sendFramedData(rpcFrame)
             let parsed = parseResponse(responseData)
             if case .error = parsed {
-                var payload = Data([recursive ? 1 : 0])
-                payload.append(path.data(using: .utf8) ?? Data())
-                return await sendLegacyCommand(type: Self.cmdDelete, payload: payload)
+                return await sendCliCommandInternal(cliCmd)
             }
             return parsed
         } catch {
-            var payload = Data([recursive ? 1 : 0])
-            payload.append(path.data(using: .utf8) ?? Data())
-            return await sendLegacyCommand(type: Self.cmdDelete, payload: payload)
+            return await sendCliCommandInternal(cliCmd)
         }
     }
 
@@ -485,11 +483,11 @@ class FlipperProtocol {
             let responseData = try await bleManager.sendFramedData(rpcFrame)
             let parsed = parseResponse(responseData)
             if case .error = parsed {
-                return await sendLegacyCommand(type: Self.cmdMkdir, payload: path.data(using: .utf8) ?? Data())
+                return await sendCliCommandInternal("storage mkdir \(path)")
             }
             return parsed
         } catch {
-            return await sendLegacyCommand(type: Self.cmdMkdir, payload: path.data(using: .utf8) ?? Data())
+            return await sendCliCommandInternal("storage mkdir \(path)")
         }
     }
 
@@ -501,11 +499,11 @@ class FlipperProtocol {
             let responseData = try await bleManager.sendFramedData(rpcFrame)
             let parsed = parseResponse(responseData)
             if case .error = parsed {
-                return await sendLegacyMoveCommand(source: sourcePath, dest: destPath)
+                return await sendCliCommandInternal("storage rename \(sourcePath) \(destPath)")
             }
             return parsed
         } catch {
-            return await sendLegacyMoveCommand(source: sourcePath, dest: destPath)
+            return await sendCliCommandInternal("storage rename \(sourcePath) \(destPath)")
         }
     }
 
@@ -517,22 +515,13 @@ class FlipperProtocol {
             let frames = try await sendRpcAndCollectResponses(rpcFrame)
             let parsed = parseMultiFrameResponse(frames)
             if case .error = parsed {
-                // RPC failed, try legacy binary format
-                let legacyResult = await sendLegacyCommand(type: Self.cmdInfo, payload: Data())
-                if case .error = legacyResult {
-                    // Legacy also failed, try CLI fallback
-                    return await getDeviceInfoViaCli()
-                }
-                return legacyResult
+                // RPC failed, fall back to CLI directly
+                return await getDeviceInfoViaCli()
             }
             return parsed
         } catch {
-            // RPC threw, try legacy then CLI
-            let legacyResult = await sendLegacyCommand(type: Self.cmdInfo, payload: Data())
-            if case .error = legacyResult {
-                return await getDeviceInfoViaCli()
-            }
-            return legacyResult
+            // RPC threw, fall back to CLI
+            return await getDeviceInfoViaCli()
         }
     }
 
@@ -601,11 +590,11 @@ class FlipperProtocol {
             let responseData = try await bleManager.sendFramedData(rpcFrame)
             let parsed = parseResponse(responseData)
             if case .error = parsed {
-                return await sendLegacyCommand(type: Self.cmdStorageInfo, payload: Data())
+                return await sendCliCommandInternal("storage info /ext")
             }
             return parsed
         } catch {
-            return await sendLegacyCommand(type: Self.cmdStorageInfo, payload: Data())
+            return await sendCliCommandInternal("storage info /ext")
         }
     }
 

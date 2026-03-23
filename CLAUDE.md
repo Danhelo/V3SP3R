@@ -6,6 +6,32 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 V3SP3R (Vesper) is an AI-powered Flipper Zero controller. The Android app (Kotlin/Compose) is the original; the iOS port (SwiftUI) on `feature/ios-swiftui-port` is a one-shot layer-by-layer port done by Pliny. Both share identical architecture and risk-gating logic.
 
+**CRITICAL: This iOS project is a PORT of the Android app. The Android codebase is the source of truth. When implementing or fixing ANY functionality on iOS, ALWAYS read the corresponding Android implementation first and match its behavior exactly.** The Android files are in `app/src/main/java/com/vesper/flipper/`.
+
+### Android Reference Index (source of truth for iOS port)
+| iOS File | Android Equivalent |
+|---|---|
+| `BLE/FlipperBLEManager.swift` | `ble/FlipperBleService.kt` |
+| `BLE/FlipperProtocol.swift` | `ble/FlipperProtocol.kt` |
+| `BLE/FlipperFileSystem.swift` | `ble/FlipperFileSystem.kt` |
+| `Domain/CommandExecutor.swift` | `domain/CommandExecutor.kt` |
+| `Domain/RiskAssessor.swift` | `domain/RiskAssessor.kt` |
+| `Domain/InputValidator.swift` | `domain/InputValidator.kt` |
+| `AI/VesperAgent.swift` | `ai/VesperAgent.kt` |
+| `AI/OpenRouterClient.swift` | `ai/OpenRouterClient.kt` |
+| `AI/VesperPrompts.swift` | `ai/VesperPrompts.kt` |
+| `UI/Chat/ChatViewModel.swift` | `ui/viewmodel/ChatViewModel.kt` |
+| `UI/FapHub/FapHubViewModel.swift` | `ui/viewmodel/FapHubViewModel.kt` |
+| `UI/PayloadLab/PayloadLabViewModel.swift` | `ui/viewmodel/PayloadLabViewModel.kt` |
+| `UI/AlchemyLab/AlchemyLabViewModel.swift` | `ui/viewmodel/AlchemyLabViewModel.kt` |
+| `UI/SignalArsenal/SignalArsenalViewModel.swift` | `ui/viewmodel/SignalArsenalViewModel.kt` |
+| `UI/SpectralOracle/SpectralOracleViewModel.swift` | `ui/viewmodel/SpectralOracleViewModel.kt` |
+| `UI/DeviceTracker/DeviceTrackerViewModel.swift` | `ui/viewmodel/DeviceTrackerViewModel.kt` |
+| `UI/ChimeraLab/ChimeraLabViewModel.swift` | `ui/viewmodel/ChimeraLabViewModel.kt` |
+| `UI/OpsCenter/OpsCenterViewModel.swift` | `ui/viewmodel/OpsCenterViewModel.kt` |
+| `Data/SettingsStore.swift` | `data/SettingsStore.kt` |
+| `Data/Models.swift` | `data/Models.kt` |
+
 ## Build & Test
 
 ### Android
